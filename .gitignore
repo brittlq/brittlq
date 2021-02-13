@@ -5,6 +5,10 @@ target/
 **/*.rs.bk
 
 dist/
-
 node_modules/
 
+.vscode/*
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/

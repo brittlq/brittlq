@@ -109,16 +109,6 @@ h5 {
 }
 ul {
 	list-style-type: none;
-}
-button {
-}
-.index-col {
-}
-.name-col {
-}
-.time-col {
-}
-ul {
 	margin: 0;
 	padding: 0;
 }

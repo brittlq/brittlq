@@ -25,7 +25,7 @@ struct Token {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    SimpleLogger::new().with_level(log::LevelFilter::Debug).init().unwrap();
+    SimpleLogger::new()/*.with_level(log::LevelFilter::Debug)*/.init().unwrap();
 
     let mut bot = utils::bot::build_bot();
 
@@ -72,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
         .or(next)
         .or(token)
         .or(posts)
-        .or(warp::fs::dir("www/dist/"));
+        .or(warp::fs::dir("./www/dist/"));
     tokio::spawn(async move {
         let server = warp::serve(routes);
         server.run(([127, 0, 0, 1], 8080)).await;

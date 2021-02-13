@@ -158,25 +158,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "community_bot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "config",
- "futures",
- "irc",
- "log",
- "reqwest",
- "serde 1.0.123",
- "serde_json",
- "simple_logger",
- "tokio",
- "uuid",
- "warp",
-]
-
-[[package]]
 name = "config"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1080,6 +1061,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "qbot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "config",
+ "futures",
+ "irc",
+ "log",
+ "reqwest",
+ "serde 1.0.123",
+ "serde_json",
+ "simple_logger",
+ "tokio",
+ "uuid",
+ "warp",
 ]
 
 [[package]]
