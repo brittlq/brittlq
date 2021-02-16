@@ -53,7 +53,6 @@ async fn main() -> anyhow::Result<()> {
     // TODO there's a better mechanism out there than this. We'll find it one day
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
     let token = warp::path("token").and(warp::body::json()).map(move |x: Token| {
-        println!("====================================================================={:?}", x);
         warp::reply::json(&tx.send(x.access_token).unwrap())
     });
 
