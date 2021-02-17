@@ -1,6 +1,4 @@
-use crate::utils::{
-    find, remove, handlers, Queue, UserEntry,
-};
+use crate::utils::{find, handlers, remove, Queue, UserEntry};
 use chrono::prelude::*;
 use futures::prelude::*;
 use serde::{Deserialize, Serialize};
