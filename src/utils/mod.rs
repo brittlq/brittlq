@@ -8,13 +8,12 @@ use uuid::Uuid;
 
 use std::collections::{HashMap, VecDeque};
 
-fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::Error> 
-    where 
-        S: Serializer 
+fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
 {
     const TIME_FMT: &'static str = "%H:%M:%S";
     s.serialize_str(&date_time.format(TIME_FMT).to_string())
-
 }
 #[derive(Deserialize, Serialize)]
 pub struct UserEntry {
@@ -40,14 +39,14 @@ pub fn pop(num: u16, user_queue: &mut VecDeque<UserEntry>) -> Option<Vec<UserEnt
     }
     if popped_entries.is_empty() {
         None
-    } 
-    else {
+    } else {
         Some(popped_entries)
     }
 }
 pub fn get_user_config(token: &str) -> Config {
     let mut settings = config::Config::default();
-    settings.merge(config::File::with_name("Settings").required(false))
+    settings
+        .merge(config::File::with_name("Settings").required(false))
         .unwrap()
         .merge(config::Environment::with_prefix("TWITCH"))
         .unwrap();

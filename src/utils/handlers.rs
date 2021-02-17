@@ -1,9 +1,7 @@
 use crate::utils::bot::Args;
 
 pub fn peek(args: Args) {
-    let popped_entries: Vec<_> = (&args
-        .queue
-        .queue)
+    let popped_entries: Vec<_> = (&args.queue.queue)
         .into_iter()
         .take(4)
         .map(|x| x.nickname.clone())
@@ -18,4 +16,3 @@ pub fn peek(args: Args) {
             .unwrap();
     }
 }
-
