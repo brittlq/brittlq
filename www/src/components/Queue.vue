@@ -1,29 +1,47 @@
 <template>
 	<div class="queue">
-		<div class="container">
+		<div>
 			<button v-on:click="next">Next</button>
-			<button v-on:click="toggle_open" v-if="is_open">Close</button>
-			<button v-on:click="toggle_open" v-else>Open</button>
+			<button  v-on:click="toggle_open" v-if="is_open">Close</button>
+			<button  v-on:click="toggle_open" v-else>Open</button>
 			<a href="https://id.twitch.tv/oauth2/authorize?client_id=2cr6kdblkcnl5d5wrwza6ovhfv2l1g&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true">
 				Connect to chat
 			</a>
-			<h5 class="index-col">ID Name Time</h5>
-			<ul id="array-wth-index">
-				<li v-for="(user, index) in queue" :key="user.id">
-					<QueueEntry :name="user.nickname" :index="index" :time_joined="user.time_joined"/>
-				</li>
-			</ul>
+		</div>
+		<div>
+			<table class="table table-sm table-hover table-striped">
+				<thead>
+					<tr>
+						<th scope="col">#</th>
+						<th scope="col">Name</th>
+						<th scope="col">Time</th>
+						<th scope="col">Actions</th>
+					</tr>
+				</thead>
+				<tbody name="user-table" is="transition-group">
+					<tr v-for="(user, index) in queue" :class="{ disabled: user.disabled }" :key="user.id">
+						<th scope="row">{{ (index+1) }}</th>
+						<td>{{ user.nickname}}</td>
+						<td>{{ user.time_joined }}</td>
+						<td><button @click="remove(user)" class="btn btn-outline-danger">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square" viewBox="0 0 16 16">
+								<path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"></path>
+								<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+							</svg>
+							Remove
+						</button></td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 	</div>
 </template>
 
 <script>
-import QueueEntry from './QueueEntry';
 
 export default {
 	name: 'Queue',
 	components: {
-		QueueEntry,
 	},
 	props: [
 		"is_open",
@@ -55,7 +73,23 @@ export default {
 		})
 		console.log(result);
 	},
+	computed: {
+		incompleteUsers: function() {
+			return this.queue.filter(function (user) {
+				return !user.disabled;
+			})
+		}
+	},
 	methods: {
+		remove(user) {
+			if (user) {
+				console.log(user);
+				var index = this.queue.indexOf(user);
+				if (index >= 0) {
+					this.queue.splice(index, 1);
+				}
+			}
+		},
 		poll(promiseFn, time) {
 			var sleep = time => new Promise(resolve => setTimeout(resolve, time))
 			promiseFn().then(sleep(time).then(() => this.poll(promiseFn, time)));
@@ -103,17 +137,14 @@ export default {
 </script>
 
 <style scoped>
-h5 {
-	margin: 0;
-	padding: 0;
+.queue {
+	text-align: center
 }
-ul {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
+.user-table-enter-active, .user-table-leave-active {
+  transition: all 1s;
 }
-li {
-	margin: 0;
-	padding: 0;
+.user-table-enter, .user-table-leave-to /* .user-table-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateX(100px);
 }
 </style>

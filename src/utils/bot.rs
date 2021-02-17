@@ -108,7 +108,7 @@ pub fn build_bot() -> Bot {
                     index + 1
                 }
                 None => {
-                    let s = UserEntry{ nickname: args.msg.sender.to_owned(), time_joined: Local::now(), id: Uuid::new_v4() };
+                    let s = UserEntry{ nickname: args.msg.sender.to_owned(), time_joined: Local::now(), id: Uuid::new_v4(), disabled: false };
                     args.queue.queue.push_back(s);
                     args.queue.queue.len()
                 }

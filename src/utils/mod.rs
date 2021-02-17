@@ -22,6 +22,7 @@ pub struct UserEntry {
     #[serde(serialize_with = "serialize_datetime")]
     time_joined: DateTime<Local>,
     id: Uuid,
+    disabled: bool,
 }
 
 #[derive(Default, Deserialize, Serialize)]
