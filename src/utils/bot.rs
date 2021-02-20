@@ -52,13 +52,20 @@ impl std::fmt::Display for QueuePos<'_> {
                     0 => "You're on deck".to_owned(),
                     _ => format!("There are {} groups ahead of you", leading_groups),
                 };
-                write!(f, "{} is #{}. {}, wait time is approximately {}-{} minutes", self.user_nickname, index + 1, leading_groups_preamble, wait_time, wait_time + 5)
+                write!(
+                    f,
+                    "{} is #{}. {}, wait time is approximately {}-{} minutes",
+                    self.user_nickname,
+                    index + 1,
+                    leading_groups_preamble,
+                    wait_time,
+                    wait_time + 5
+                )
             }
             None => {
                 write!(f, "{} is not in the queue", self.user_nickname)
             }
         }
-       
     }
 }
 
@@ -128,35 +135,49 @@ pub fn build_bot() -> Bot {
             if !args.queue.is_open {
                 return;
             }
-            
+
             let mut queue_pos = QueuePos {
                 index: find(args.msg.sender, &args.queue.queue),
-                user_nickname: args.msg.sender, 
-                group_size: 4, 
-                wait_per_group: 5
+                user_nickname: args.msg.sender,
+                group_size: 4,
+                wait_per_group: 5,
             };
 
             if queue_pos.index.is_none() {
-                let s = UserEntry{ nickname: args.msg.sender.to_owned(), time_joined: Local::now(), id: Uuid::new_v4(), disabled: false };
+                let s = UserEntry {
+                    nickname: args.msg.sender.to_owned(),
+                    time_joined: Local::now(),
+                    id: Uuid::new_v4(),
+                    disabled: false,
+                };
                 args.queue.queue.push_back(s);
                 queue_pos.index = Some(args.queue.queue.len() - 1);
             };
 
-            args.writer.send_privmsg(&args.msg.target, &format!("{}", queue_pos)).unwrap();
+            args.writer
+                .send_privmsg(&args.msg.target, &format!("{}", queue_pos))
+                .unwrap();
         })
         .with_command("!next", handlers::peek)
         .with_command("!place", |args: Args| {
             let queue_pos = QueuePos {
                 index: find(args.msg.sender, &args.queue.queue),
-                user_nickname: args.msg.sender, 
-                group_size: 4, 
-                wait_per_group: 5
+                user_nickname: args.msg.sender,
+                group_size: 4,
+                wait_per_group: 5,
             };
-            args.writer.send_privmsg(args.msg.target, &format!("{}", queue_pos)).unwrap();
+            args.writer
+                .send_privmsg(args.msg.target, &format!("{}", queue_pos))
+                .unwrap();
         })
         .with_command("!leave", |args: Args| {
             if remove(args.msg.sender, &mut args.queue.queue).is_some() {
-                args.writer.send_privmsg(args.msg.target, &format!("{} has been removed from the queue.", args.msg.sender)).unwrap();
+                args.writer
+                    .send_privmsg(
+                        args.msg.target,
+                        &format!("{} has been removed from the queue.", args.msg.sender),
+                    )
+                    .unwrap();
             }
         })
 }
