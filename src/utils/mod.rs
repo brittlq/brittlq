@@ -12,7 +12,7 @@ fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::
 where
     S: Serializer,
 {
-    const TIME_FMT: &'static str = "%H:%M:%S";
+    const TIME_FMT: &str = "%H:%M:%S";
     s.serialize_str(&date_time.format(TIME_FMT).to_string())
 }
 #[derive(Deserialize, Serialize)]
