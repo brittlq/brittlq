@@ -119,10 +119,13 @@ pub fn build_bot() -> Bot {
         .with_command("!place", |args: Args| {
             match find(args.msg.sender, &args.queue.queue) {
                 Some(index) => {
-                    let position = index + 1;
-                    let leading_groups = position / 4;
+                    let leading_groups = index / 4;
                     let wait_time = leading_groups * 5;
-                    let response = format!("{} is #{}. There are {} groups ahead of you, wait time is approximately {} minutes", args.msg.sender, position, leading_groups, wait_time);
+                    
+                    let response = match leading_groups {
+                        0 => format!("{} is #{}. You're on deck! There is 1 group ahead of you, wait time is approximately {}-{} minutes", args.msg.sender, index + 1, wait_time, wait_time + 5),
+                        _ => format!("{} is #{}. There are {} groups ahead of you, wait time is approximately {} minutes", args.msg.sender, index + 1, leading_groups, wait_time),
+                    };
                     args.writer.send_privmsg(args.msg.target, &response).unwrap();
                 }
                 None => {
@@ -131,7 +134,7 @@ pub fn build_bot() -> Bot {
             }
         })
         .with_command("!leave", |args: Args| {
-            if let Some(_) = remove(args.msg.sender, &mut args.queue.queue) {
+            if remove(args.msg.sender, &mut args.queue.queue).is_some() {
                 args.writer.send_privmsg(args.msg.target, &format!("You've been removed from the queue, {}.", args.msg.sender)).unwrap();
             }
         })
