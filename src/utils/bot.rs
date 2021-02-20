@@ -35,6 +35,33 @@ where
     }
 }
 
+struct QueuePos<'a> {
+    index: Option<usize>,
+    user_nickname: &'a str,
+    group_size: usize,
+    wait_per_group: usize, // TODO this should be a chrono::Duration
+}
+
+impl std::fmt::Display for QueuePos<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.index {
+            Some(index) => {
+                let leading_groups = index / self.group_size;
+                let wait_time = leading_groups * self.wait_per_group;
+                let leading_groups_preamble = match leading_groups {
+                    0 => "You're on deck".to_owned(),
+                    _ => format!("There are {} groups ahead of you", leading_groups),
+                };
+                write!(f, "{} is #{}. {}, wait time is approximately {}-{} minutes", self.user_nickname, index + 1, leading_groups_preamble, wait_time, wait_time + 5)
+            }
+            None => {
+                write!(f, "{} is not in the queue", self.user_nickname)
+            }
+        }
+       
+    }
+}
+
 #[derive(Default, Deserialize, Serialize)]
 pub struct Bot {
     #[serde(skip)]
@@ -101,41 +128,35 @@ pub fn build_bot() -> Bot {
             if !args.queue.is_open {
                 return;
             }
-            let position = match find(args.msg.sender, &args.queue.queue) {
-                Some(index) => {
-                    index + 1
-                }
-                None => {
-                    let s = UserEntry{ nickname: args.msg.sender.to_owned(), time_joined: Local::now(), id: Uuid::new_v4(), disabled: false };
-                    args.queue.queue.push_back(s);
-                    args.queue.queue.len()
-                }
+            
+            let mut queue_pos = QueuePos {
+                index: find(args.msg.sender, &args.queue.queue),
+                user_nickname: args.msg.sender, 
+                group_size: 4, 
+                wait_per_group: 5
             };
-            let response = format!("{}, you're #{} in the queue", args.msg.sender, position);
-            log::debug!("{}", response);
-            args.writer.send_privmsg(&args.msg.target, &response).unwrap();
+
+            if queue_pos.index.is_none() {
+                let s = UserEntry{ nickname: args.msg.sender.to_owned(), time_joined: Local::now(), id: Uuid::new_v4(), disabled: false };
+                args.queue.queue.push_back(s);
+                queue_pos.index = Some(args.queue.queue.len() - 1);
+            };
+
+            args.writer.send_privmsg(&args.msg.target, &format!("{}", queue_pos)).unwrap();
         })
         .with_command("!next", handlers::peek)
         .with_command("!place", |args: Args| {
-            match find(args.msg.sender, &args.queue.queue) {
-                Some(index) => {
-                    let leading_groups = index / 4;
-                    let wait_time = leading_groups * 5;
-                    
-                    let response = match leading_groups {
-                        0 => format!("{} is #{}. You're on deck! There is 1 group ahead of you, wait time is approximately {}-{} minutes", args.msg.sender, index + 1, wait_time, wait_time + 5),
-                        _ => format!("{} is #{}. There are {} groups ahead of you, wait time is approximately {} minutes", args.msg.sender, index + 1, leading_groups, wait_time),
-                    };
-                    args.writer.send_privmsg(args.msg.target, &response).unwrap();
-                }
-                None => {
-                    args.writer.send_privmsg(args.msg.target, &format!("{} is not in the queue", args.msg.sender)).unwrap();
-                }
-            }
+            let queue_pos = QueuePos {
+                index: find(args.msg.sender, &args.queue.queue),
+                user_nickname: args.msg.sender, 
+                group_size: 4, 
+                wait_per_group: 5
+            };
+            args.writer.send_privmsg(args.msg.target, &format!("{}", queue_pos)).unwrap();
         })
         .with_command("!leave", |args: Args| {
             if remove(args.msg.sender, &mut args.queue.queue).is_some() {
-                args.writer.send_privmsg(args.msg.target, &format!("You've been removed from the queue, {}.", args.msg.sender)).unwrap();
+                args.writer.send_privmsg(args.msg.target, &format!("{} has been removed from the queue.", args.msg.sender)).unwrap();
             }
         })
 }
