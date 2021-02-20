@@ -1,7 +1,7 @@
-use irc::client::prelude::*;
 use serde::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 use warp::{http::StatusCode, Filter};
+use std::process::Command;
 
 mod utils;
 use utils::{get_user_config, pop, remove};
@@ -25,7 +25,7 @@ struct Token {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    SimpleLogger::new() /*.with_level(log::LevelFilter::Debug)*/
+    SimpleLogger::new().with_level(log::LevelFilter::Debug)
         .init()
         .unwrap();
 
@@ -82,6 +82,15 @@ async fn main() -> anyhow::Result<()> {
         let server = warp::serve(routes);
         server.run(([127, 0, 0, 1], 8080)).await;
     });
+
+    if cfg!(target_os = "windows")
+    {
+        let output = Command::new("cmd").args(&["/C", "start http://localhost:8080"]).output();
+        if let Ok(o) = output {
+            println!("{:?}", o.stdout);
+            println!("{:?}", o.stderr);
+        }
+    }
 
     let token = format!("oauth:{}", rx.recv().await.unwrap());
     bot.run(get_user_config(&token)).await
