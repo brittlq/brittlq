@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use oneshot::error::RecvError;
+use serde::Deserialize;
 use tokio::sync::oneshot;
 
 use crate::utils::{StateCommand, StateRx, StateTx};
@@ -98,7 +98,7 @@ mod handlers {
 }
 
 pub mod endpoints {
-    use super::{handlers, StateTx, NextQueryArg};
+    use super::{handlers, NextQueryArg, StateTx};
     use crate::utils::chatbot;
 
     use warp::Filter;
