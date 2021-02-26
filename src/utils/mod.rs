@@ -1,5 +1,5 @@
-pub mod bot;
-pub mod handlers;
+pub mod chatbot;
+pub mod server;
 
 use chrono::prelude::*;
 use irc::client::prelude::*;
@@ -7,6 +7,37 @@ use serde::{Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 
 use std::collections::{HashMap, VecDeque};
+use tokio::sync::oneshot;
+
+pub type StateTx = tokio::sync::mpsc::Sender<StateCommand>;
+pub type StateRx<T> = tokio::sync::oneshot::Receiver<T>;
+
+#[derive(Debug)]
+pub enum StateCommand {
+    AddUser {
+        user: String,
+        tx: oneshot::Sender<usize>,
+    },
+    GetQueue(oneshot::Sender<serde_json::Value>),
+    GetQueueStatus(oneshot::Sender<bool>),
+    FindUser {
+        name: String,
+        tx: oneshot::Sender<Option<usize>>,
+    },
+    PeekQueue {
+        count: u16,
+        tx: oneshot::Sender<Vec<UserEntry>>,
+    },
+    PopQueue {
+        count: u16,
+        tx: oneshot::Sender<Option<Vec<UserEntry>>>,
+    },
+    RemoveUser {
+        user: String,
+        tx: oneshot::Sender<Option<()>>,
+    },
+    ToggleQueue(oneshot::Sender<bool>),
+}
 
 fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::Error>
 where
@@ -15,19 +46,26 @@ where
     const TIME_FMT: &str = "%H:%M:%S";
     s.serialize_str(&date_time.format(TIME_FMT).to_string())
 }
-#[derive(Deserialize, Serialize)]
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UserEntry {
     pub nickname: String,
     #[serde(serialize_with = "serialize_datetime")]
-    time_joined: DateTime<Local>,
-    id: Uuid,
-    disabled: bool,
+    pub time_joined: DateTime<Local>,
+    pub id: Uuid,
 }
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct Queue {
     pub queue: VecDeque<UserEntry>,
     pub is_open: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Token {
+    pub access_token: String,
+    scope: String,
+    token_type: String,
 }
 
 pub fn pop(num: u16, user_queue: &mut VecDeque<UserEntry>) -> Option<Vec<UserEntry>> {

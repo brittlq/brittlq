@@ -14,7 +14,9 @@ export default {
 	},
 	data() {
 		return {
+			
 			queue: [ 
+				/* Test array
 				{ 
 					id: '4efb9fdd-6b1b-468c-9a43-867e3a51c6cc', 
 					nickname: 'Abc',
@@ -33,6 +35,7 @@ export default {
 					time_joined: '11:01:32',
 					disabled: false,
 				},
+				*/
 			],
 		}
 	}
