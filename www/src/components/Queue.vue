@@ -19,7 +19,7 @@
 					</tr>
 				</thead>
 				<tbody name="user-table" is="transition-group">
-					<tr v-for="(user, index) in queue" :class="{ disabled: user.disabled }" :key="user.id">
+					<tr v-for="(user, index) in queue" :key="user.id">
 						<th scope="row">{{ (index+1) }}</th>
 						<td>{{ user.nickname}}</td>
 						<td>{{ user.time_joined }}</td>
@@ -48,7 +48,7 @@ export default {
 		"queue",
 	],
 	created() {
-		this.poll(() => new Promise(() => fetch('http://localhost:8080/status').then((response) => {
+		this.poll(() => new Promise(() => fetch('http://localhost:8080/queue').then((response) => {
 			return response.json();
 		})
 		.then((data) => 
@@ -64,7 +64,7 @@ export default {
 			res[parts[0]] = parts[1];
 			return res;
 		}, {});
-		fetch('http://localhost:8080/token', {
+		fetch('http://localhost:8080/queue/token', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -83,11 +83,16 @@ export default {
 	methods: {
 		remove(user) {
 			if (user) {
-				console.log(user);
-				var index = this.queue.indexOf(user);
+				console.log("Removing: ", user);
+				var index = this.queue.indexOf(user.nickname);
 				if (index >= 0) {
 					this.queue.splice(index, 1);
 				}
+				fetch("http://localhost:8080/queue/" + user.nickname, {
+					method: 'DELETE'
+				}).then((response) => {
+					console.log("Confirmed removal of ", response)
+				})
 			}
 		},
 		poll(promiseFn, time) {
@@ -96,12 +101,7 @@ export default {
 		},
 		toggle_open(event) {
 			if (event) {
-				fetch('http://localhost:8080/toggle', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-				}).then((response) => {
+				fetch('http://localhost:8080/queue/toggle').then((response) => {
 					return response.json();
 				})
 				.then((data) => {
@@ -115,7 +115,7 @@ export default {
 		},
 		next(event) {
 			if (event) {
-				fetch('http://localhost:8080/next?num=4').then((response) => {
+				fetch('http://localhost:8080/queue/pop').then((response) => {
 					return response.json();
 				})
 				.then((data) => {
