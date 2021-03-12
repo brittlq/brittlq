@@ -1,6 +1,6 @@
 [package]
 name = "qbot"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Eric Huff <thegreaterici@gmail.com>"]
 edition = "2018"
 
