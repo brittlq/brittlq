@@ -81,7 +81,7 @@ mod handlers {
             let names_message = temp_users.join(", @");
             chatbot_tx
                 .send(Commands::SendMessage(format!(
-                    "Up next: @{}.",
+                    "Up next: @{}. You can reach BK in game with the following message: @brittleknee Hi.",
                     names_message
                 )))
                 .await

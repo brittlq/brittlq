@@ -1,13 +1,14 @@
 <template>
 	<div class="queue">
 		<div>
-			<button v-on:click="next">Next</button>
+			<button v-on:click="next" :disabled="is_disabled">Next</button>
 			<button  v-on:click="toggle_open" v-if="is_open">Close</button>
 			<button  v-on:click="toggle_open" v-else>Open</button>
-			https://id.twitch.tv/oauth2/authorize ?client_id=<your client ID> &redirect_uri=<your registered redirect URI> &response_type=code &scope=<space-separated list of scopes> &claims=<JSON object specifying requested claims>
-			<a href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=code&scope=openid+chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'>
+			<a href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'>
 				Connect to chat
 			</a>
+      <p>queue size: {{ queue.length }}</p>
+      <p>time remaining: {{ Math.floor(queue.length / 4) * 5 }} minutes</p>
 		</div>
 		<div>
 			<table class="table table-sm table-hover table-striped">
@@ -42,8 +43,9 @@
 export default {
   name: "Queue",
   components: {},
-  props: ["is_open", "queue"],
+  props: ["is_open", "queue", "is_disabled"],
   created() {
+    this.is_disabled = false;
     this.poll(
       () =>
         new Promise(() =>
@@ -129,6 +131,9 @@ export default {
             console.error(err);
           });
       }
+      this.is_disabled = true;
+      var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
+      sleep(1000).then(() => this.is_disabled = false);
     },
     auth(event) {
       if (event) {
