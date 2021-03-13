@@ -7,9 +7,9 @@
 			<a href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'>
 				Connect to chat
 			</a>
-      <p>queue size: {{ queue.length }}</p>
-      <p>time remaining: {{ Math.floor(queue.length / 4) * 5 }} minutes</p>
-		</div>
+      <strong>Queue size</strong>: {{ queue.length }}
+      <strong>Time remaining</strong>: {{ Math.floor(queue.length / 4) * 5 }} minutes
+      <strong>Party size</strong>: <input v-model="pop_size">
 		<div>
 			<table class="table table-sm table-hover table-striped">
 				<thead>
@@ -43,7 +43,7 @@
 export default {
   name: "Queue",
   components: {},
-  props: ["is_open", "queue", "is_disabled"],
+  props: ["is_open", "queue", "is_disabled", "pop_size"],
   created() {
     this.is_disabled = false;
     this.poll(
@@ -120,7 +120,12 @@ export default {
     },
     next(event) {
       if (event) {
-        fetch("http://localhost:8080/queue/pop")
+        let url = 'http://localhost:8080/queue/pop';
+        if(this.pop_size)
+        {
+          url = `${url}?count=${this.pop_size}`;
+        }
+        fetch(url)
           .then((response) => {
             return response.json();
           })
