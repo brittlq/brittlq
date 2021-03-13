@@ -63,6 +63,7 @@ mod handlers {
         chatbot_tx: chatbot::Tx,
     ) -> Result<impl warp::Reply, Infallible> {
         let (resp_tx, resp_rx) = oneshot::channel();
+        log::debug!("Popping: {}", args.count.unwrap_or(4));
         let popped_entries = dispatch(
             tx,
             resp_rx,

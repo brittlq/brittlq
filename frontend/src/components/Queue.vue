@@ -1,49 +1,67 @@
 <template>
-	<div class="queue">
-		<div>
-			<button v-on:click="next" :disabled="is_disabled">Next</button>
-			<button  v-on:click="toggle_open" v-if="is_open">Close</button>
-			<button  v-on:click="toggle_open" v-else>Open</button>
-			<a href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'>
-				Connect to chat
-			</a>
-      <p>queue size: {{ queue.length }}</p>
-      <p>time remaining: {{ Math.floor(queue.length / 4) * 5 }} minutes</p>
-		</div>
-		<div>
-			<table class="table table-sm table-hover table-striped">
-				<thead>
-					<tr>
-						<th scope="col">#</th>
-						<th scope="col">Name</th>
-						<th scope="col">Time</th>
-						<th scope="col">Actions</th>
-					</tr>
-				</thead>
-				<tbody name="user-table" is="transition-group">
-					<tr v-for="(user, index) in queue" :key="user.id">
-						<th scope="row">{{ (index+1) }}</th>
-						<td>{{ user.nickname}}</td>
-						<td>{{ user.time_joined }}</td>
-						<td><button @click="remove(user)" class="btn btn-outline-danger">
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square" viewBox="0 0 16 16">
-								<path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"></path>
-								<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
-							</svg>
-							Remove
-						</button></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+  <div class="queue">
+    <div>
+      <nav class="navbar navbar-dark">
+        <button v-on:click="next" :disabled="is_disabled">Next</button>
+        <button v-on:click="toggle_open" v-if="is_open">Close</button>
+        <button v-on:click="toggle_open" v-else>Open</button>
+        <a
+          href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'
+        >
+          Connect to chat
+        </a>
+        <strong>Queue size</strong>{{ queue.length }}
+        <strong>Time remaining</strong
+        >{{ Math.floor(queue.length / 4) * 5 }} minutes
+        <input class="form-control form-control-dark" v-model="pop_size" placeholder="Party size">
+      </nav>
+    </div>
+    <div>
+      <table class="table table-sm table-hover table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Time</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody name="user-table" is="transition-group">
+          <tr v-for="(user, index) in queue" :key="user.id">
+            <th scope="row">{{ index + 1 }}</th>
+            <td>{{ user.nickname }}</td>
+            <td>{{ user.time_joined }}</td>
+            <td>
+              <button @click="remove(user)" class="btn btn-outline-danger">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-x-square"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"
+                  ></path>
+                  <path
+                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+                  ></path>
+                </svg>
+                Remove
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
   name: "Queue",
   components: {},
-  props: ["is_open", "queue", "is_disabled"],
   created() {
     this.is_disabled = false;
     this.poll(
@@ -60,6 +78,9 @@ export default {
         ),
       4000
     );
+  },
+  data() {
+    return { is_disabled: false, pop_size: 4, is_open: false, queue: [] };
   },
   mounted() {
     var hash_parameters = location.hash.substr(1);
@@ -120,7 +141,11 @@ export default {
     },
     next(event) {
       if (event) {
-        fetch("http://localhost:8080/queue/pop")
+        let url = "http://localhost:8080/queue/pop";
+        if (this.pop_size) {
+          url = `${url}?count=${this.pop_size}`;
+        }
+        fetch(url)
           .then((response) => {
             return response.json();
           })
@@ -133,7 +158,7 @@ export default {
       }
       this.is_disabled = true;
       var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
-      sleep(1000).then(() => this.is_disabled = false);
+      sleep(1000).then(() => (this.is_disabled = false));
     },
     auth(event) {
       if (event) {
