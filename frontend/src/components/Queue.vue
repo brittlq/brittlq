@@ -8,7 +8,8 @@
         <a
           href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'
         >
-          Connect to chat
+          Connect to Twitch
+          <font-awesome-icon :icon="['fab', 'twitch']" />
         </a>
         <strong>Queue size</strong>{{ queue.length }}
         <strong>Time remaining</strong
