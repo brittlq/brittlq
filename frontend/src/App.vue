@@ -1,22 +1,21 @@
 <template>
-	<div id="app" class="container">
-		<Queue v-bind:queue="queue"/>
-	</div>
+  <div id="app" class="container">
+    <Queue v-bind:queue="queue" />
+  </div>
 </template>
 
 <script>
-import Queue from "./components/Queue"
+import Queue from "./components/Queue";
 
 export default {
-	name: 'App',
-	components: {
-		Queue
-	},
-	data() {
-		return {
-			
-			queue: [ 
-				/* Test array
+  name: "App",
+  components: {
+    Queue,
+  },
+  data() {
+    return {
+      queue: [
+        /* Test array
 				{ 
 					id: '4efb9fdd-6b1b-468c-9a43-867e3a51c6cc', 
 					nickname: 'Abc',
@@ -36,11 +35,10 @@ export default {
 					disabled: false,
 				},
 				*/
-			],
-		}
-	}
-}
+      ],
+    };
+  },
+};
 </script>
 
-<style>
-</style>
+<style></style>
