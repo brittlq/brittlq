@@ -1,66 +1,55 @@
 <template>
+  <QueueControls
+    :queue_length="queue.length"
+    :is_disabled="is_disabled"
+    :is_open="is_open"
+    @next="next"
+    @toggle_open="toggle_open"
+  />
   <div class="queue">
-    <div>
-      <nav class="navbar navbar-dark">
-        <button v-on:click="next" :disabled="is_disabled">Next</button>
-        <button v-on:click="toggle_open" v-if="is_open">Close</button>
-        <button v-on:click="toggle_open" v-else>Open</button>
-        <a
-          href='https://id.twitch.tv/oauth2/authorize?client_id=25hshmzbtpompde80gzfr9bkahb9sp&redirect_uri=http://localhost:8080&response_type=token&scope=chat:read+chat:edit&force_verify=true&claims={"id_token":{"email":null,"email_verified":null }}'
-        >
-          Connect to Twitch
-          <font-awesome-icon :icon="['fab', 'twitch']" />
-        </a>
-        <strong>Queue size</strong>{{ queue.length }}
-        <strong>Time remaining</strong
-        >{{ Math.floor(queue.length / 4) * 5 }} minutes
-        <input
-          class="form-control form-control-dark"
-          v-model="pop_size"
-          placeholder="Party size"
-        />
-      </nav>
-    </div>
-    <div>
-      <table class="table table-sm table-hover table-striped">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Name</th>
-            <th scope="col">Time</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <transition-group name="user-table">
-            <QueueEntry
-              v-for="(user, index) in queue"
-              :key="user.id"
-              :entry="user"
-              :index="index + 1"
-              :is_owner="is_owner"
-              @remove-user="$emit('remove-user', user)"
-              class="queue-item"
-            ></QueueEntry>
-          </transition-group>
-        </tbody>
-      </table>
-    </div>
+    <table class="table table-sm table-hover table-striped">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Name</th>
+          <th scope="col">Time</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <transition-group name="user-table">
+          <QueueEntry
+            v-for="(user, index) in queue"
+            :key="user.id"
+            :entry="user"
+            :index="index + 1"
+            @remove_user="remove"
+            class="queue-item"
+          ></QueueEntry>
+        </transition-group>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <script>
+import QueueEntry from "./QueueEntry.vue";
+import QueueControls from "./QueueControls";
+
+const axios = require("axios").default;
+
 export default {
   name: "Queue",
-  components: {},
+  components: { QueueControls, QueueEntry },
   created() {
     this.is_disabled = false;
     this.poll(
       () =>
         new Promise(() =>
-          fetch("http://localhost:8080/queue")
+          axios
+            .get("/queue")
             .then((response) => {
-              return response.json();
+              return response.data;
             })
             .then((data) => {
               this.queue = data.queue;
@@ -71,7 +60,7 @@ export default {
     );
   },
   data() {
-    return { is_disabled: false, pop_size: 4, is_open: false, queue: [] };
+    return { is_disabled: false, is_open: false, queue: [] };
   },
   mounted() {
     var hash_parameters = location.hash.substr(1);
@@ -80,21 +69,9 @@ export default {
       res[parts[0]] = parts[1];
       return res;
     }, {});
-    fetch("http://localhost:8080/queue/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(result),
+    axios.post("/queue/token", JSON.stringify(result)).then((result) => {
+      console.log(result);
     });
-    console.log(result);
-  },
-  computed: {
-    incompleteUsers: function () {
-      return this.queue.filter(function (user) {
-        return !user.disabled;
-      });
-    },
   },
   methods: {
     remove(user) {
@@ -104,9 +81,7 @@ export default {
         if (index >= 0) {
           this.queue.splice(index, 1);
         }
-        fetch("http://localhost:8080/queue/" + user.nickname, {
-          method: "DELETE",
-        }).then((response) => {
+        axios.delete("/queue/" + user.nickname).then((response) => {
           console.log("Confirmed removal of ", response);
         });
       }
@@ -117,9 +92,10 @@ export default {
     },
     toggle_open(event) {
       if (event) {
-        fetch("http://localhost:8080/queue/toggle")
+        axios
+          .get("/queue/toggle")
           .then((response) => {
-            return response.json();
+            return response.data;
           })
           .then((data) => {
             console.log(data);
@@ -130,15 +106,13 @@ export default {
           });
       }
     },
-    next(event) {
+    next(event, size) {
       if (event) {
-        let url = "http://localhost:8080/queue/pop";
-        if (this.pop_size) {
-          url = `${url}?count=${this.pop_size}`;
-        }
-        fetch(url)
+        let url = `/queue/pop?count=${size}`;
+        axios
+          .get(url)
           .then((response) => {
-            return response.json();
+            return response.data;
           })
           .then((data) => {
             this.queue = data;

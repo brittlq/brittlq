@@ -4,7 +4,10 @@
     <td>{{ entry.nickname }}</td>
     <td>{{ entry.time_joined }}</td>
     <td>
-      <button class="btn btn-outline-danger">
+      <button
+        @click="$emit('remove_user', entry)"
+        class="btn btn-outline-danger"
+      >
         <font-awesome-icon icon="minus-circle" />
         remove
       </button>
