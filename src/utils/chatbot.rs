@@ -106,7 +106,7 @@ impl Bot {
 
     // run the bot until its done
     pub async fn run(&mut self, tx: StateTx) -> anyhow::Result<()> {
-        log::debug!("starting main loop");
+        tracing::debug!("starting main loop");
         let mut stream = self.client.stream()?;
         let sender = self.client.sender();
 
@@ -114,12 +114,12 @@ impl Bot {
             tokio::select! {
                 // Oh wow that Option<Result<_>> nesting is pretty gnarly
                 Some(Ok(message)) = stream.next() => {
-                    log::debug!("{}", message);
+                    tracing::debug!("{}", message);
                     if let irc::Command::PRIVMSG(ref _target, ref msg) = message.command {
                         // see if its a command and do stuff with it
                         if let Some(cmd) = Self::parse_command(msg) {
                             if let Some(command) = self.commands.get_mut(cmd) {
-                                log::trace!("dispatching to: {}", cmd.escape_debug());
+                                tracing::trace!("dispatching to: {}", cmd.escape_debug());
 
                                 let args = Args {
                                     msg: Message {
@@ -140,14 +140,14 @@ impl Bot {
                 Some(command) = self.rx.recv() => {
                     match command {
                         Commands::SendMessage(message) => {sender.send_privmsg(&self.channel, &message).unwrap();},
-                        Commands::Token(_) => log::debug!("Already handled token"),
+                        Commands::Token(_) => tracing::debug!("Already handled token"),
                     }
                 }
                 else => break,
             }
         }
 
-        log::trace!("end of main loop");
+        tracing::trace!("end of main loop");
         Ok(())
     }
 

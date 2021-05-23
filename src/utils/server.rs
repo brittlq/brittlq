@@ -63,7 +63,7 @@ mod handlers {
         chatbot_tx: chatbot::Tx,
     ) -> Result<impl warp::Reply, Infallible> {
         let (resp_tx, resp_rx) = oneshot::channel();
-        log::debug!("Popping: {}", args.count.unwrap_or(4));
+        tracing::debug!("Popping: {}", args.count.unwrap_or(4));
         let popped_entries = dispatch(
             tx,
             resp_rx,
@@ -114,6 +114,7 @@ pub mod endpoints {
             .or(token(chatbot_tx))
             .or(user_delete(tx))
             .or(warp::fs::dir("./www/dist/"))
+            .with(warp::trace::request())
     }
 
     fn with_tx<T>(
@@ -133,6 +134,7 @@ pub mod endpoints {
             .and(warp::delete())
             .and(with_tx(tx))
             .and_then(handlers::delete_user)
+            .with(warp::trace::named("user"))
     }
 
     // GET /queue
@@ -143,6 +145,7 @@ pub mod endpoints {
             .and(warp::get())
             .and(with_tx(tx))
             .and_then(handlers::get_queue)
+            .with(warp::trace::named("queue"))
     }
 
     // GET /queue/toggle
@@ -155,6 +158,7 @@ pub mod endpoints {
             .and(with_tx(tx))
             .and(with_tx(chatbot_tx))
             .and_then(handlers::toggle_queue)
+            .with(warp::trace::named("toggle"))
     }
     // GET /queue/pop?:u16
     pub fn queue_pop(
@@ -167,6 +171,7 @@ pub mod endpoints {
             .and(with_tx(tx))
             .and(with_tx(chatbot_tx))
             .and_then(handlers::pop_queue)
+            .with(warp::trace::named("pop"))
     }
 
     // TODO This gets removed once the backend is running seperately. ATM we are using the implict auth flow, which is best for client side authentication.
@@ -179,5 +184,6 @@ pub mod endpoints {
             .and(warp::body::json())
             .and(with_tx(tx))
             .and_then(handlers::send_token)
+            .with(warp::trace::named("token"))
     }
 }

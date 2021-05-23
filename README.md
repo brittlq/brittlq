@@ -7,7 +7,7 @@ Simple client-side chatbot for Twitch used for queueing chat members for communi
 The application is built in two steps:
 ```bash
 cargo build
-cd www && yarn build
+cd frontend && npm install && npm run build
 ```
 ## Running
 Create a file called `Settings.toml` in the same location as the qbot executable that contains the following:
@@ -28,10 +28,12 @@ qbot starts with the queue closed. Click the Open button to allow users in chat 
 * `!place` - User: get their position in the queue, with an estimated wait time.
 
 ## Roadmap
-- [ ] Add ability to change party size. Not really necessary in its current use case, this would just make the bot less brittle
+- [x] Add ability to change party size. Not really necessary in its current use case, this would just make the bot less brittle
 - [ ] Separate backend onto remote host.
   - [ ] Create frontend application
   - [ ] Switch to stronger oauth flow
   - [ ] Create website so the queue owner, moderators, and community members can monitor/interact with the queue
-- [ ] Allow for reordering queue members
-- [ ] add moderator controls to the chat bot
+- [ ] Allow for reordering queue entries
+- [ ] Add moderator controls to the chat bot
+- [ ] Discord integration?
+- [ ] Customizability of chat announcements

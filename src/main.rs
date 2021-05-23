@@ -1,11 +1,13 @@
 use chrono::prelude::*;
-use simple_logger::SimpleLogger;
 use std::collections::VecDeque;
 use std::process::Command;
+use tracing::subscriber::set_global_default;
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+use utils::{chatbot, get_user_config, pop, remove, Queue};
 use uuid::Uuid;
 
 mod utils;
-use utils::{chatbot, get_user_config, pop, remove, Queue};
 
 /* THE BIG TODO
  * Split the tasks up:
@@ -47,10 +49,14 @@ use utils::{chatbot, get_user_config, pop, remove, Queue};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .init()
-        .unwrap();
+    // Set up tracing system
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let formatting_layer = BunyanFormattingLayer::new("qbot".into(), std::io::stdout);
+    let subscriber = Registry::default()
+        .with(env_filter)
+        .with(JsonStorageLayer)
+        .with(formatting_layer);
+    set_global_default(subscriber).expect("Failed to set subscriber");
 
     let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
@@ -147,15 +153,15 @@ async fn main() -> anyhow::Result<()> {
 
     tokio::select! {
         _ = bot_task => {
-            log::debug!("Bot task exited.");
+            tracing::debug!("Bot task exited.");
             Ok(()) as anyhow::Result<()>
         }
         _ = server_task => {
-            log::debug!("Server task exited.");
+            tracing::debug!("Server task exited.");
             Ok(()) as anyhow::Result<()>
         }
         _ = state_task => {
-            log::debug!("State task exited.");
+            tracing::debug!("State task exited.");
             Ok(()) as anyhow::Result<()>
         }
     }

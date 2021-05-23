@@ -1,8 +1,9 @@
 <template>
-  <QueueControls 
-  :queue_length="queue.length" 
-  @toggle_open="toggle_open" 
-  :is_open="is_open" />
+  <QueueControls
+    :queue_length="queue.length"
+    @toggle_open="toggle_open"
+    :is_open="is_open"
+  />
   <div class="queue">
     <table class="table table-sm table-hover table-striped">
       <thead>
@@ -71,14 +72,14 @@ export default {
       })
       .then((result) => {
         console.log(result);
-    });
+      });
   },
   methods: {
     poll(promiseFn, time) {
       var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
       promiseFn().then(sleep(time).then(() => this.poll(promiseFn, time)));
     },
-        remove(user) {
+    remove(user) {
       if (user) {
         console.log("Removing: ", user);
         var index = this.queue.indexOf(user.nickname);
