@@ -5,7 +5,7 @@
     <td>{{ entry.time_joined }}</td>
     <td>
       <button
-        @click="$emit('remove_user', entry)"
+        @click="$emit('remove-user', entry)"
         class="btn btn-outline-danger"
       >
         <font-awesome-icon icon="minus-circle" />

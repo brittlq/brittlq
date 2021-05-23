@@ -1,8 +1,6 @@
 <template>
   <nav class="navbar navbar-dark">
-    <button @click="$emit('next', $event, pop_size)" :disabled="is_disabled">
-      Next
-    </button>
+    <button @click="next" :disabled="is_disabled">Next</button>
     <button @click="$emit('toggle_open', $event)" v-if="is_open">Close</button>
     <button @click="$emit('toggle_open', $event)" v-else>Open</button>
     <a
@@ -22,14 +20,36 @@
 </template>
 
 <script>
+const axios = require("axios").default;
 export default {
   name: "QueueControls",
   data() {
-    return { pop_size: 4 };
+    return { is_disabled: false, pop_size: 4 };
   },
   computed: {
     timeLeftInQueue() {
       return Math.floor(this.queue_length / this.pop_size) * 5;
+    },
+  },
+  methods: {
+    next(event, size) {
+      if (event) {
+        let url = `/queue/pop?count=${size}`;
+        axios
+          .get(url)
+          .then((response) => {
+            return response.data;
+          })
+          .then((data) => {
+            this.queue = data;
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
+      this.is_disabled = true;
+      var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
+      sleep(1000).then(() => (this.is_disabled = false));
     },
   },
   props: {
@@ -41,11 +61,7 @@ export default {
       required: true,
       type: Boolean,
     },
-    is_disabled: {
-      required: true,
-      type: Boolean,
-    },
   },
-  emits: ["next", "toggle_open"],
+  emits: ["toggle_open"],
 };
 </script>

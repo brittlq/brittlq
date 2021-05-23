@@ -1,11 +1,8 @@
 <template>
-  <QueueControls
-    :queue_length="queue.length"
-    :is_disabled="is_disabled"
-    :is_open="is_open"
-    @next="next"
-    @toggle_open="toggle_open"
-  />
+  <QueueControls 
+  :queue_length="queue.length" 
+  @toggle_open="toggle_open" 
+  :is_open="is_open" />
   <div class="queue">
     <table class="table table-sm table-hover table-striped">
       <thead>
@@ -23,7 +20,7 @@
             :key="user.id"
             :entry="user"
             :index="index + 1"
-            @remove_user="remove"
+            @remove-user="remove"
             class="queue-item"
           ></QueueEntry>
         </transition-group>
@@ -42,7 +39,6 @@ export default {
   name: "Queue",
   components: { QueueControls, QueueEntry },
   created() {
-    this.is_disabled = false;
     this.poll(
       () =>
         new Promise(() =>
@@ -60,7 +56,7 @@ export default {
     );
   },
   data() {
-    return { is_disabled: false, is_open: false, queue: [] };
+    return { is_open: false, queue: [] };
   },
   mounted() {
     var hash_parameters = location.hash.substr(1);
@@ -69,12 +65,20 @@ export default {
       res[parts[0]] = parts[1];
       return res;
     }, {});
-    axios.post("/queue/token", JSON.stringify(result)).then((result) => {
-      console.log(result);
+    axios
+      .post("/queue/token", JSON.stringify(result), {
+        headers: { "content-type": "application/json" },
+      })
+      .then((result) => {
+        console.log(result);
     });
   },
   methods: {
-    remove(user) {
+    poll(promiseFn, time) {
+      var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
+      promiseFn().then(sleep(time).then(() => this.poll(promiseFn, time)));
+    },
+        remove(user) {
       if (user) {
         console.log("Removing: ", user);
         var index = this.queue.indexOf(user.nickname);
@@ -86,10 +90,6 @@ export default {
         });
       }
     },
-    poll(promiseFn, time) {
-      var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
-      promiseFn().then(sleep(time).then(() => this.poll(promiseFn, time)));
-    },
     toggle_open(event) {
       if (event) {
         axios
@@ -99,31 +99,12 @@ export default {
           })
           .then((data) => {
             console.log(data);
-            this.is_open = data.is_open;
+            this.open = data.open;
           })
           .catch((err) => {
             console.log(err);
           });
       }
-    },
-    next(event, size) {
-      if (event) {
-        let url = `/queue/pop?count=${size}`;
-        axios
-          .get(url)
-          .then((response) => {
-            return response.data;
-          })
-          .then((data) => {
-            this.queue = data;
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      this.is_disabled = true;
-      var sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
-      sleep(1000).then(() => (this.is_disabled = false));
     },
     auth(event) {
       if (event) {
