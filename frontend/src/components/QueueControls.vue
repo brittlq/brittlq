@@ -32,9 +32,9 @@ export default {
     },
   },
   methods: {
-    next(event, size) {
+    next(event) {
       if (event) {
-        let url = `/queue/pop?count=${size}`;
+        let url = `/queue/pop?count=${this.pop_size}`;
         axios
           .get(url)
           .then((response) => {
