@@ -1,5 +1,5 @@
+use brittlq::{set_tracer, trace_init};
 use chrono::prelude::*;
-use qbot::{set_tracer, trace_init};
 use std::collections::VecDeque;
 use std::process::Command;
 use tracing::subscriber::set_global_default;
@@ -52,18 +52,8 @@ mod utils;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Set up tracing system
-<<<<<<< Updated upstream
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("brittlq".into(), std::io::stdout);
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer);
-    set_global_default(subscriber).expect("Failed to set subscriber");
-=======
     let subscriber = trace_init();
-    set_tracer(subscriber);
->>>>>>> Stashed changes
+    set_tracer(&subscriber);
 
     let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
