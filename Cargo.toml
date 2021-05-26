@@ -1,5 +1,5 @@
 [package]
-name = "qbot"
+name = "brittlq"
 version = "0.4.0"
 authors = ["Eric Huff <thegreaterici@gmail.com>"]
 edition = "2018"
