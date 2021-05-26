@@ -1,9 +1,7 @@
+use brittlq::{register_subscriber, subscriber_init};
 use chrono::prelude::*;
 use std::collections::VecDeque;
 use std::process::Command;
-use tracing::subscriber::set_global_default;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 use utils::{chatbot, get_user_config, pop, remove, Queue};
 use uuid::Uuid;
 
@@ -50,13 +48,8 @@ mod utils;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Set up tracing system
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("brittlq".into(), std::io::stdout);
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer);
-    set_global_default(subscriber).expect("Failed to set subscriber");
+    let subscriber = subscriber_init();
+    register_subscriber(subscriber);
 
     let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
@@ -131,9 +124,8 @@ async fn main() -> anyhow::Result<()> {
         let output = Command::new("cmd")
             .args(&["/C", "start http://localhost:8080"])
             .output();
-        if let Ok(o) = output {
-            println!("{:?}", o.stdout);
-            println!("{:?}", o.stderr);
+        if let Err(_) = output {
+            tracing::error!("Could not launch browser");
         }
     }
 
