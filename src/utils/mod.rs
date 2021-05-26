@@ -81,6 +81,7 @@ pub fn pop(num: u16, user_queue: &mut VecDeque<UserEntry>) -> Option<Vec<UserEnt
         Some(popped_entries)
     }
 }
+
 pub fn get_user_config(token: &str) -> Config {
     let mut settings = config::Config::default();
     settings
