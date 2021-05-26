@@ -1,7 +1,7 @@
-# qbot
+# brittlq
 Simple client-side chatbot for Twitch used for queueing chat members for community engagement. 
 
-[![Actions Status](https://github.com/trollham/qbot/workflows/CI/badge.svg)](https://github.com/trollham/qbot/actions)
+[![Actions Status](https://github.com/trollham/brittlq/workflows/CI/badge.svg)](https://github.com/trollham/brittlq/actions)
 
 ## Building
 The application is built in two steps:
@@ -10,16 +10,16 @@ cargo build
 cd frontend && npm install && npm run build
 ```
 ## Running
-Create a file called `Settings.toml` in the same location as the qbot executable that contains the following:
+Create a file called `Settings.toml` in the same location as the brittlq executable that contains the following:
 ```toml
 name = "<bot_name>"
 channel = "<channel_name>"
 ```
 Replace `<bot_name>` with the account name the bot is using in chat, and `<channel_name>` with the channel the bot is joining. 
 
-You must click `Connect to chat` after starting qbot. This will take you to the Twitch Authentication page, which requires you to authenticate as the same account as the `name` field in the `Settings.toml` file. This allows the bot to sign into Twitch and join the specified channel. 
+You must click `Connect to chat` after starting brittlq. This will take you to the Twitch Authentication page, which requires you to authenticate as the same account as the `name` field in the `Settings.toml` file. This allows the bot to sign into Twitch and join the specified channel. 
 
-qbot starts with the queue closed. Click the Open button to allow users in chat to begin joining the queue. 
+brittlq starts with the queue closed. Click the Open button to allow users in chat to begin joining the queue. 
 
 ## Chat Commands
 * `!join` - User: add themselves to the queue. A user is not allowed to be in the queue multiple times. They must be removed by either `!leave`-ing themselves, or via the frontend, before they can join again. `!join`ing more than once will result in the bot responding with that user's position as if the user did used the  `!place` command.

@@ -51,7 +51,7 @@ mod utils;
 async fn main() -> anyhow::Result<()> {
     // Set up tracing system
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("qbot".into(), std::io::stdout);
+    let formatting_layer = BunyanFormattingLayer::new("brittlq".into(), std::io::stdout);
     let subscriber = Registry::default()
         .with(env_filter)
         .with(JsonStorageLayer)
