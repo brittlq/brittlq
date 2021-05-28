@@ -1,11 +1,7 @@
-use brittlq::{set_tracer, trace_init};
+use brittlq::{register_subscriber, subscriber_init};
 use chrono::prelude::*;
 use std::collections::VecDeque;
 use std::process::Command;
-use tracing::subscriber::set_global_default;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 use utils::{chatbot, get_user_config, pop, remove, Queue};
 use uuid::Uuid;
 
@@ -52,8 +48,8 @@ mod utils;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Set up tracing system
-    let subscriber = trace_init();
-    set_tracer(&subscriber);
+    let subscriber = subscriber_init();
+    register_subscriber(subscriber);
 
     let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
