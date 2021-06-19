@@ -19,10 +19,11 @@ jobs:
     steps:
       - run: exit 0
 
-  style:
+  rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout repo
+        uses: actions/checkout@v2
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -30,16 +31,11 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt
+      - name: Check format
+        run: cargo fmt --all -- --check
 
-      - name: cargo fmt --check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-  build:
+  test:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Build
