@@ -1,11 +1,5 @@
-use brittlq::{register_subscriber, subscriber_init};
-use chrono::prelude::*;
-use std::collections::VecDeque;
+use brittlq::{chatbot, get_user_config, register_subscriber, server::endpoints, subscriber_init};
 use std::process::Command;
-use utils::{chatbot, get_user_config, pop, remove, Queue};
-use uuid::Uuid;
-
-mod utils;
 
 /* THE BIG TODO
  * Split the tasks up:
@@ -51,71 +45,14 @@ async fn main() -> anyhow::Result<()> {
     let subscriber = subscriber_init();
     register_subscriber(subscriber);
 
-    let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
+    let (state_tx, state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
     let bot_state_tx = state_tx.clone();
 
-    let state_task = tokio::spawn(async move {
-        use crate::utils::{find, StateCommand::*, UserEntry};
-        let mut state = Queue {
-            queue: VecDeque::new(),
-            is_open: false,
-        };
-
-        while let Some(command) = state_rx.recv().await {
-            match command {
-                AddUser { user, tx } => {
-                    let pos = find(&user, &state.queue);
-
-                    if let Some(index) = pos {
-                        tx.send(index).unwrap();
-                    } else {
-                        state.queue.push_back(UserEntry {
-                            nickname: user,
-                            time_joined: Local::now(),
-                            id: Uuid::new_v4(),
-                        });
-                        tx.send(state.queue.len() - 1).unwrap();
-                    }
-                }
-                GetQueue(tx) => {
-                    tx.send(serde_json::to_value(&state).unwrap()).unwrap();
-                }
-
-                GetQueueStatus(tx) => {
-                    tx.send(state.is_open).unwrap();
-                }
-
-                FindUser { name, tx } => {
-                    tx.send(find(&name, &state.queue)).unwrap();
-                }
-
-                PeekQueue { count, tx } => {
-                    let first_n: Vec<_> =
-                        state.queue.iter().take(count as usize).cloned().collect();
-                    tx.send(first_n).unwrap();
-                }
-
-                PopQueue { count, tx } => {
-                    let popped_users = pop(count, &mut state.queue);
-                    tx.send(popped_users).unwrap();
-                }
-
-                RemoveUser { user, tx } => {
-                    tx.send(remove(&user, &mut state.queue)).unwrap();
-                }
-
-                ToggleQueue(tx) => {
-                    state.is_open = !state.is_open;
-                    tx.send(state.is_open).unwrap();
-                }
-            }
-        }
-        Ok(()) as anyhow::Result<()>
-    });
+    let state_task = brittlq::init_state(state_rx);
 
     let server_task = tokio::spawn(async move {
-        let server = warp::serve(utils::server::endpoints::queue(state_tx, chat_tx));
+        let server = warp::serve(endpoints::queue(state_tx, chat_tx));
         server.run(([127, 0, 0, 1], 8080)).await;
         Ok(()) as anyhow::Result<()>
     });
@@ -124,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
         let output = Command::new("cmd")
             .args(&["/C", "start http://localhost:8080"])
             .output();
-        if let Err(_) = output {
+        if output.is_err() {
             tracing::error!("Could not launch browser");
         }
     }
@@ -139,7 +76,7 @@ async fn main() -> anyhow::Result<()> {
         .unwrap();
 
     let bot_task = tokio::spawn(async move {
-        utils::chatbot::build_bot(&mut bot);
+        chatbot::build_bot(&mut bot);
         bot.run(bot_state_tx).await
     });
 

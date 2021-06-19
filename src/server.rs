@@ -2,7 +2,7 @@ use oneshot::error::RecvError;
 use serde::Deserialize;
 use tokio::sync::oneshot;
 
-use crate::utils::{StateCommand, StateRx, StateTx};
+use crate::{StateCommand, StateRx, StateTx};
 
 async fn dispatch<T>(tx: StateTx, rx: StateRx<T>, command: StateCommand) -> Result<T, RecvError> {
     tx.send(command).await.unwrap();
@@ -16,7 +16,7 @@ pub struct NextQueryArg {
 
 mod handlers {
     use super::{dispatch, NextQueryArg};
-    use crate::utils::{
+    use crate::{
         chatbot::{self, Commands},
         StateCommand, StateTx, Token,
     };
@@ -100,7 +100,7 @@ mod handlers {
 
 pub mod endpoints {
     use super::{handlers, NextQueryArg, StateTx};
-    use crate::utils::chatbot;
+    use crate::chatbot;
 
     use warp::Filter;
 
@@ -113,6 +113,7 @@ pub mod endpoints {
             .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
             .or(token(chatbot_tx))
             .or(user_delete(tx))
+            .or(health())
             .or(warp::fs::dir("./www/dist/"))
             .with(warp::trace(
                 |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
@@ -176,6 +177,11 @@ pub mod endpoints {
             .with(warp::trace::named("pop"))
     }
 
+    // GET /health
+    pub fn health() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+        warp::path!("health").and(warp::get()).map(warp::reply)
+    }
+
     // TODO This gets removed once the backend is running seperately. ATM we are using the implict auth flow, which is best for client side authentication.
     // Once this is no longer running on the client, we'll need to use an approach that utilizes client secrets instead.
     pub fn token(
@@ -187,5 +193,57 @@ pub mod endpoints {
             .and(with_tx(tx))
             .and_then(handlers::send_token)
             .with(warp::trace::named("token"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        init_state,
+        {chatbot, server::endpoints, StateCommand},
+    };
+
+    struct Txs {
+        state_tx: tokio::sync::mpsc::Sender<StateCommand>,
+        state_rx: tokio::sync::mpsc::Receiver<StateCommand>,
+        chat_tx: chatbot::Tx,
+        _chat_rx: chatbot::Rx,
+    }
+
+    fn init_tx() -> Txs {
+        let (state_tx, state_rx) = tokio::sync::mpsc::channel(1);
+        let (chat_tx, _chat_rx) = tokio::sync::mpsc::channel(1);
+        Txs {
+            state_tx,
+            state_rx,
+            chat_tx,
+            _chat_rx,
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn get_health_check_200() {
+        let health_filter = endpoints::health();
+
+        let value = warp::test::request()
+            .path("/health")
+            .reply(&health_filter)
+            .await;
+
+        assert_eq!(value.status(), 200);
+        assert_eq!(value.body(), "");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn post_health_check_405() {
+        let health_filter = endpoints::health();
+
+        let value = warp::test::request()
+            .path("/health")
+            .method("POST")
+            .reply(&health_filter)
+            .await;
+
+        assert_eq!(value.status(), 405);
     }
 }
