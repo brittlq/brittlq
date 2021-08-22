@@ -14,7 +14,7 @@ services:
     network_mode: service:db
     env_file: ./devcontainer.env
     environment: 
-      - DATABASE_URL=postgres://db:5432/brittlq
+      - DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@db:5432/brittlq
   db:
     image: 'postgres:13'
     restart: unless-stopped
