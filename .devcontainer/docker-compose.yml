@@ -1,0 +1,22 @@
+version: '3'
+services:
+  rust-dev: 
+    build: 
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes: 
+      - ..:/workspace:cached
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    command: sleep infinity
+    network_mode: service:db
+    env_file: ./devcontainer.env
+    environment: 
+      - DATABASE_URL="postgres://db:5432/brittlq"
+  db:
+    image: 'postgres:13'
+    restart: unless-stopped
+    env_file: ./devcontainer.env
+    
