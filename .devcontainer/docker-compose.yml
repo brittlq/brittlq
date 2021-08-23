@@ -13,10 +13,7 @@ services:
     command: sleep infinity
     network_mode: service:db
     env_file: ./devcontainer.env
-    environment: 
-      - DATABASE_URL=postgres://db:5432/brittlq
   db:
     image: 'postgres:13'
     restart: unless-stopped
     env_file: ./devcontainer.env
-    
