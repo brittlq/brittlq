@@ -30,7 +30,7 @@
 	"forwardPorts": [8080, 5432],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "rustup component add rustfmt clippy && cargo install sqlx-cli",
+	// "postCreateCommand": "cargo install sqlx-cli",
 
 	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode"
