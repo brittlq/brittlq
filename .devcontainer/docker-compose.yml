@@ -16,4 +16,9 @@ services:
   db:
     image: 'postgres:13'
     restart: unless-stopped
+    volumes:
+    - db_data:/var/lib/postgresql/data
     env_file: ./devcontainer.env
+
+volumes:
+  db_data:
