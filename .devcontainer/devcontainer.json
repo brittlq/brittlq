@@ -18,12 +18,13 @@
 	"shutdownAction": "stopCompose",
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"matklad.rust-analyzer",
-		"octref.vetur",
-		"dbaeumer.vscode-eslint",
 		"bungcip.better-toml",
+		"serayuzgur.crates",
+		"mutantdino.resourcemonitor",
+		"matklad.rust-analyzer",
+		"dbaeumer.vscode-eslint",
 		"vadimcn.vscode-lldb",
-		"mutantdino.resourcemonitor"
+		"octref.vetur",
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
