@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
 
     let server_task = tokio::spawn(async move {
         let server = warp::serve(endpoints::queue(state_tx, chat_tx));
-        server.run(([127, 0, 0, 1], 8080)).await;
+        server.run(([0, 0, 0, 0], 8080)).await;
         Ok(()) as anyhow::Result<()>
     });
 
