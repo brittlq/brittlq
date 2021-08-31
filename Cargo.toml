@@ -13,6 +13,7 @@ chrono = { version = "0.4", features = ["serde"] }
 config = "0.11"
 futures = "0.3"
 irc = "0.15"
+peg = "0.7"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["rc"] }
 serde_json = "1.0"
