@@ -17,3 +17,5 @@ node_modules/
 
 .env
 www/
+
+nohup.out
