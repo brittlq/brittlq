@@ -1,40 +1,41 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/rust
 {
-	"name": "Rust",
+  "name": "Rust",
 
-	// Set *default* container specific settings.json values on container create.
-	"settings": { 
-		"lldb.executable": "/usr/bin/lldb",
-		// VS Code don't watch files under ./target
-		"files.watcherExclude": {
-			"**/target/**": true
-		}
-	},
-	"dockerComposeFile": ["./docker-compose.yml"],
-	"service": "rust-dev",
-	"workspaceFolder": "/workspace",
-	
-	"shutdownAction": "stopCompose",
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"bungcip.better-toml",
-		"serayuzgur.crates",
-		"mutantdino.resourcemonitor",
-		"matklad.rust-analyzer",
-		"dbaeumer.vscode-eslint",
-		"vadimcn.vscode-lldb",
-		"octref.vetur",
-		"editorconfig.editorconfig",
-		"esbenp.prettier-vscode"
-	],
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "lldb.executable": "/usr/bin/lldb",
+    // VS Code don't watch files under ./target
+    "files.watcherExclude": {
+      "**/target/**": true
+    }
+  },
+  "dockerComposeFile": ["./docker-compose.yml"],
+  "service": "rust-dev",
+  "workspaceFolder": "/workspace",
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [8080, 5432],
+  "shutdownAction": "stopCompose",
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "bungcip.better-toml",
+    "serayuzgur.crates",
+    "mutantdino.resourcemonitor",
+    "matklad.rust-analyzer",
+    "dbaeumer.vscode-eslint",
+    "vadimcn.vscode-lldb",
+    "octref.vetur",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode"
+  ],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "cargo install sqlx-cli",
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [8080, 5432],
 
-	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "vscode"
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "cargo install sqlx-cli",
+  "postStartCommand": "sh .devcontainer/start.sh",
+
+  // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+  "remoteUser": "vscode"
 }

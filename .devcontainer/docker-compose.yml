@@ -21,9 +21,7 @@ services:
     env_file: ./devcontainer.env
   nginx:
     image: nginx:stable
-    restart: unles-stopped
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: unless-stopped
 
 volumes:
   db_data:
