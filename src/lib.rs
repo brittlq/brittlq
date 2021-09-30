@@ -213,6 +213,7 @@ pub async fn init_state(
                 }
             }
         }
+        tracing::error!("Exiting the state tasks for some reason");
         Ok(()) as anyhow::Result<()>
     })
 }

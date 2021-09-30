@@ -89,8 +89,11 @@ async fn main() -> anyhow::Result<()> {
             tracing::debug!("Server task exited.");
             Ok(()) as anyhow::Result<()>
         }
-        _ = state_task => {
-            tracing::debug!("State task exited.");
+        e = state_task => {
+            tracing::debug!("State task exited: {:?}", e);
+            if let Err(error) = e.await? {
+                tracing::error!("STATE TASK ERROR. {}", error);
+            }
             Ok(()) as anyhow::Result<()>
         }
     }

@@ -7,7 +7,12 @@ mod irc {
 }
 use std::collections::HashMap;
 
-mod actions;
+pub mod actions;
+pub mod commands;
+
+use actions::BotAction;
+
+use self::commands::Channel;
 
 #[derive(Debug)]
 pub enum Commands {
@@ -30,7 +35,6 @@ pub struct Args<'a> {
     pub rx: &'a Rx,
     pub state_tx: &'a StateTx,
 }
-
 
 #[async_trait]
 pub trait Handler: Send + Sync {
@@ -82,22 +86,58 @@ impl std::fmt::Display for QueuePos<'_> {
     }
 }
 
+async fn execute_actions(
+    trigger: Message<'_>,
+    sender: &::irc::client::Sender,
+    actions: &[BotAction],
+) {
+    for action in actions {
+        match action {
+            BotAction::Say(msg) => {
+                if let Err(e) = sender.send_privmsg(trigger.target, msg) {
+                    tracing::error!(
+                        "Failed to send message to {}\n\tError:{}\n\tMessage:{}",
+                        trigger.target,
+                        e,
+                        msg
+                    );
+                }
+            }
+            BotAction::Wait(duration) => {
+                tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
+                    .await;
+            }
+        }
+    }
+}
+
 pub struct Bot {
     channel: String,
     client: irc::Client,
     commands: HashMap<String, Box<dyn Handler>>,
+    channels: HashMap<String, Channel>,
     rx: Rx,
 }
 
 impl Bot {
     pub async fn new(user_config: irc::Config, rx: Rx) -> Result<Bot, irc::Error> {
-        let channel = user_config.channels.iter().take(1).cloned().collect();
+        let channel: String = user_config.channels.iter().take(1).cloned().collect();
         let client = irc::Client::from_config(user_config).await?;
         client.identify()?;
+        let mut channels = HashMap::new();
+        channels.insert(
+            channel.clone(),
+            Channel {
+                name: channel.clone(),
+                command_prefix: "!".to_owned(),
+                commands: HashMap::new(),
+            },
+        );
         Ok(Bot {
             channel,
             client,
             commands: HashMap::new(),
+            channels,
             rx,
         })
     }
@@ -118,25 +158,34 @@ impl Bot {
                 // Oh wow that Option<Result<_>> nesting is pretty gnarly
                 Some(Ok(message)) = stream.next() => {
                     tracing::debug!("{}", message);
-                    if let irc::Command::PRIVMSG(ref _target, ref msg) = message.command {
-                        // see if its a command and do stuff with it
-                        if let Some(cmd) = Self::parse_command(msg) {
-                            if let Some(command) = self.commands.get_mut(cmd) {
-                                tracing::trace!("dispatching to: {}", cmd.escape_debug());
-
-                                let args = Args {
-                                    msg: Message {
-                                        target: message.response_target().unwrap(),
-                                        sender: message.source_nickname().unwrap(),
-                                        message: msg,
-                                    },
-                                    writer: &sender,
-                                    rx: &self.rx,
-                                    state_tx: &tx,
-                                };
-
-                                command.handle(args).await;
+                    match message.command {
+                        irc::Command::PRIVMSG(ref target, ref msg) =>
+                        {
+                            if let Some(channel) = self.channels.get_mut(target) {
+                                if let Some(actions) = channel.extract_command(msg) {
+                                    let msg =
+                                        Message {
+                                            target: message.response_target().unwrap(),
+                                            sender: message.source_nickname().unwrap(),
+                                            message: msg,
+                                        };
+                                    execute_actions(msg, &sender, actions).await;
+                                } else if let Ok(command_editor) = actions::action_parser::command(&msg[1..]) {
+                                    let name = command_editor.name.clone(); // TODO don't really need this clone here, we can be smart instead
+                                    match channel.edit_commands(command_editor) {
+                                        Some(_) => {
+                                            // TODO I dont' think we should just be `unwrap`ing these
+                                            sender.send_privmsg(message.response_target().unwrap(), format!("Command edit successful: {}", name));
+                                        }
+                                        None => {
+                                            sender.send_privmsg(message.response_target().unwrap(), format!("Command edit failed: {}", name));
+                                        }
+                                    }
+                                }
                             }
+                        }
+                        _ => {
+                            tracing::debug!("IRC commmand not supported");
                         }
                     }
                 },
