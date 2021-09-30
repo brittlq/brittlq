@@ -25,6 +25,8 @@
 		"dbaeumer.vscode-eslint",
 		"vadimcn.vscode-lldb",
 		"octref.vetur",
+		"editorconfig.editorconfig",
+		"esbenp.prettier-vscode"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
