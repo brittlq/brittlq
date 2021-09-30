@@ -114,7 +114,7 @@ pub mod endpoints {
             .or(token(chatbot_tx))
             .or(user_delete(tx))
             .or(health())
-            .or(warp::fs::dir("./www/dist/"))
+            .or(warp::fs::dir("./frontend/dist/"))
             .with(warp::trace(
                 |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
             ))
