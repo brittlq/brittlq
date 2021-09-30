@@ -4,6 +4,10 @@ version = "0.4.0"
 authors = ["Eric Huff <thegreaterici@gmail.com>"]
 edition = "2018"
 
+[lib]
+name = "brittlq"
+path = "src/lib.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

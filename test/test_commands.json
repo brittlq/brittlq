@@ -1,0 +1,19 @@
+{
+    "prefix": "!",
+    "commands": {
+        "ending": [
+            {
+                "index": 1,
+                "action": "say \"That's it folks! Please support the channel by subscribing\""
+            },
+            {
+                "index": 2,
+                "action": "wait 1"
+            },
+            {
+                "index": 3,
+                "action": "say \"Thank you for stopping by!\""
+            }
+        ]
+    }
+}
