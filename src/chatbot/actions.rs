@@ -19,7 +19,7 @@ enum CommandVariable {
     Username,
     QueueLength,
     QueuePlace,
-    QueueTimeRemanining
+    QueueTimeRemanining,
 }
 
 impl std::fmt::Display for CommandVariable {
@@ -48,7 +48,7 @@ impl std::str::FromStr for CommandVariable {
             "queue_length" => Ok(CommandVariable::QueueLength),
             "queue_place" => Ok(CommandVariable::QueuePlace),
             "queue_time_remaining" => Ok(CommandVariable::QueueTimeRemanining),
-            _ => Err("Something fucky happened")
+            _ => Err("Something fucky happened"),
         }
     }
 }
@@ -101,7 +101,7 @@ peg::parser! {
             / "edit" { CommandActions::Edit }
             / "remove" { CommandActions::Remove }
 
-        ///  This rule technically accepts a script on the `remove` command action. For now, the parser will parse the commands, 
+        ///  This rule technically accepts a script on the `remove` command action. For now, the parser will parse the commands,
         ///  but this is not officially supported behavior and may be removed in the future.
         /// ```
         /// use brittlq::chatbot::actions::{action_parser, BotAction, Command, CommandActions};

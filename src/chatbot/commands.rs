@@ -25,7 +25,6 @@ impl Channel {
     pub fn edit_commands(&mut self, command: Command) -> Option<()> {
         // Should probably return a Result
         match command.action {
-
             // TODO improvements on the size of the stored Command by using `or_insert_with_key`
             // TODO utilize a real error type instead of an Option
             actions::CommandActions::Add => {
