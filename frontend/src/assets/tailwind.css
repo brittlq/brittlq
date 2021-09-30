@@ -3,3 +3,7 @@
 @tailwind components;
 
 @tailwind utilities;
+
+.button-dark {
+  @apply bg-gray-900 border border-black hover:bg-gray-700 hover:border-gray-800 p-1 rounded-lg text-gray-100;
+}
