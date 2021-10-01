@@ -75,10 +75,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .unwrap();
 
-    let bot_task = tokio::spawn(async move {
-        chatbot::build_bot(&mut bot);
-        bot.run(bot_state_tx).await
-    });
+    let bot_task = tokio::spawn(async move { bot.run(bot_state_tx).await });
 
     tokio::select! {
         _ = bot_task => {

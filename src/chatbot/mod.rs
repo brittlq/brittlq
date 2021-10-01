@@ -1,6 +1,6 @@
-use crate::{StateCommand, StateTx, Token};
-use async_trait::async_trait;
-use chrono::Duration;
+use self::commands::Channel;
+use crate::{StateTx, Token};
+use actions::BotAction;
 use futures::prelude::*;
 mod irc {
     pub use irc::{client::prelude::*, error::*};
@@ -9,10 +9,6 @@ use std::collections::HashMap;
 
 pub mod actions;
 pub mod commands;
-
-use actions::BotAction;
-
-use self::commands::Channel;
 
 #[derive(Debug)]
 pub enum Commands {
@@ -23,33 +19,11 @@ pub enum Commands {
 pub type Tx = tokio::sync::mpsc::Sender<Commands>;
 pub type Rx = tokio::sync::mpsc::Receiver<Commands>;
 
-pub struct Message<'a> {
-    pub target: &'a str,
-    pub sender: &'a str,
-    pub message: &'a str,
-}
-
-pub struct Args<'a> {
-    pub msg: Message<'a>,
-    pub writer: &'a irc::Sender,
-    pub rx: &'a Rx,
-    pub state_tx: &'a StateTx,
-}
-
-#[async_trait]
-pub trait Handler: Send + Sync {
-    async fn handle(&mut self, args: Args<'_>);
-}
-
-#[async_trait]
-impl<F> Handler for F
-where
-    F: Fn(Args<'_>),
-    F: Send + Sync,
-{
-    async fn handle(&mut self, args: Args<'_>) {
-        (self)(args)
-    }
+#[derive(Clone)]
+pub struct Message {
+    pub target: String,
+    pub sender: String,
+    pub message: String,
 }
 
 struct QueuePos<'a> {
@@ -87,34 +61,38 @@ impl std::fmt::Display for QueuePos<'_> {
 }
 
 async fn execute_actions(
-    trigger: Message<'_>,
-    sender: &::irc::client::Sender,
-    actions: &[BotAction],
-) {
-    for action in actions {
-        match action {
-            BotAction::Say(msg) => {
-                if let Err(e) = sender.send_privmsg(trigger.target, msg) {
-                    tracing::error!(
-                        "Failed to send message to {}\n\tError:{}\n\tMessage:{}",
-                        trigger.target,
-                        e,
-                        msg
-                    );
+    trigger: Message,
+    sender: ::irc::client::Sender,
+    actions: Vec<BotAction>, // Bleh, but the values need to be moved in rather than passed as a slice to avoid potential use-after-free
+) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        for action in actions {
+            match action {
+                BotAction::Say(msg) => {
+                    tracing::debug!("Sending message:{}", &msg);
+                    if let Err(e) = sender.send_privmsg(&trigger.target, &msg) {
+                        tracing::error!(
+                            "Failed to send message to {}\n\tError:{}\n\tMessage:{}",
+                            trigger.target,
+                            e,
+                            msg
+                        );
+                    }
+                }
+                BotAction::Wait(duration) => {
+                    tracing::debug!("Sleeping for {}", duration);
+                    tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
+                        .await;
                 }
             }
-            BotAction::Wait(duration) => {
-                tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
-                    .await;
-            }
         }
-    }
+    })
 }
 
 pub struct Bot {
     channel: String,
     client: irc::Client,
-    commands: HashMap<String, Box<dyn Handler>>,
+    // commands: HashMap<String, Box<dyn Handler>>,
     channels: HashMap<String, Channel>,
     rx: Rx,
 }
@@ -136,15 +114,10 @@ impl Bot {
         Ok(Bot {
             channel,
             client,
-            commands: HashMap::new(),
+            // commands: HashMap::new(),
             channels,
             rx,
         })
-    }
-
-    // add this command to the bot
-    pub fn with_command(&mut self, name: impl Into<String>, cmd: impl Handler + 'static) {
-        self.commands.insert(name.into(), Box::new(cmd));
     }
 
     // run the bot until its done
@@ -163,13 +136,16 @@ impl Bot {
                         {
                             if let Some(channel) = self.channels.get_mut(target) {
                                 if let Some(actions) = channel.extract_command(msg) {
-                                    let msg =
+                                    let msg = msg.clone();
+                                    let irc_response_data =
                                         Message {
-                                            target: message.response_target().unwrap(),
-                                            sender: message.source_nickname().unwrap(),
+                                            target: message.response_target().unwrap().to_string(),
+                                            sender: message.source_nickname().unwrap().to_string(),
                                             message: msg,
                                         };
-                                    execute_actions(msg, &sender, actions).await;
+
+                                        let command_sender = sender.clone();
+                                        execute_actions(irc_response_data, command_sender, actions.to_vec()).await;
                                 } else if let Ok(command_editor) = actions::action_parser::command(&msg[1..]) {
                                     let name = command_editor.name.clone(); // TODO don't really need this clone here, we can be smart instead
                                     match channel.edit_commands(command_editor) {
@@ -209,136 +185,4 @@ impl Bot {
         }
         input.splitn(2, ' ').next()
     }
-}
-
-// GAT support can't come soon enough
-
-struct Peek;
-
-#[async_trait]
-impl Handler for Peek {
-    async fn handle(&mut self, args: Args<'_>) {
-        let (state_tx, state_rx) = tokio::sync::oneshot::channel();
-        args.state_tx
-            .send(StateCommand::PeekQueue {
-                count: 4,
-                tx: state_tx,
-            })
-            .await
-            .unwrap();
-
-        let first_n: Vec<String> = state_rx
-            .await
-            .unwrap()
-            .into_iter()
-            .map(|u| u.nickname)
-            .collect();
-
-        if !first_n.is_empty() {
-            args.writer
-                .send_privmsg(args.msg.target, &first_n.join(", "))
-                .unwrap();
-        } else {
-            args.writer
-                .send_privmsg(args.msg.target, "The queue is empty")
-                .unwrap();
-        }
-    }
-}
-
-struct Join;
-
-#[async_trait]
-impl Handler for Join {
-    async fn handle(&mut self, args: Args<'_>) {
-        let (resp_tx, resp_rx) = tokio::sync::oneshot::channel();
-        args.state_tx
-            .send(StateCommand::GetQueueStatus(resp_tx))
-            .await
-            .unwrap();
-        let status = resp_rx.await.unwrap();
-
-        if !status {
-            return;
-        }
-
-        let (resp_tx, resp_rx) = tokio::sync::oneshot::channel();
-        args.state_tx
-            .send(StateCommand::AddUser {
-                user: args.msg.sender.to_string(),
-                tx: resp_tx,
-            })
-            .await
-            .unwrap();
-        let index = resp_rx.await.unwrap();
-
-        let queue_pos = QueuePos {
-            index: Some(index),
-            user_nickname: args.msg.sender,
-            group_size: 4,
-            wait_per_group: 5,
-        };
-
-        args.writer
-            .send_privmsg(&args.msg.target, &format!("{}", queue_pos))
-            .unwrap();
-    }
-}
-
-struct Place;
-
-#[async_trait]
-impl Handler for Place {
-    async fn handle(&mut self, args: Args<'_>) {
-        let (resp_tx, resp_rx) = tokio::sync::oneshot::channel();
-        args.state_tx
-            .send(StateCommand::FindUser {
-                name: args.msg.sender.to_string(),
-                tx: resp_tx,
-            })
-            .await
-            .unwrap();
-        let index = resp_rx.await.unwrap();
-
-        let queue_pos = QueuePos {
-            index,
-            user_nickname: args.msg.sender,
-            group_size: 4,
-            wait_per_group: 5,
-        };
-        args.writer
-            .send_privmsg(args.msg.target, &format!("{}", queue_pos))
-            .unwrap();
-    }
-}
-
-struct Leave;
-#[async_trait]
-impl Handler for Leave {
-    async fn handle(&mut self, args: Args<'_>) {
-        let (resp_tx, resp_rx) = tokio::sync::oneshot::channel();
-        args.state_tx
-            .send(StateCommand::RemoveUser {
-                user: args.msg.sender.to_string(),
-                tx: resp_tx,
-            })
-            .await
-            .unwrap();
-        let user = resp_rx.await.unwrap();
-        if user.is_some() {
-            args.writer
-                .send_privmsg(
-                    args.msg.target,
-                    &format!("{} has been removed from the queue.", args.msg.sender),
-                )
-                .unwrap();
-        }
-    }
-}
-
-pub fn build_bot(bot: &mut Bot) {
-    bot.with_command("!join", Join {});
-    bot.with_command("!next", Peek {});
-    bot.with_command("!place", Place {});
-    bot.with_command("!leave", Leave {});
 }
