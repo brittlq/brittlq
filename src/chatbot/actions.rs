@@ -53,6 +53,7 @@ impl std::str::FromStr for CommandVariable {
     }
 }
 
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum BotAction {
     Say(String),

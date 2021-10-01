@@ -92,7 +92,6 @@ async fn execute_actions(
 pub struct Bot {
     channel: String,
     client: irc::Client,
-    // commands: HashMap<String, Box<dyn Handler>>,
     channels: HashMap<String, Channel>,
     rx: Rx,
 }
@@ -114,7 +113,6 @@ impl Bot {
         Ok(Bot {
             channel,
             client,
-            // commands: HashMap::new(),
             channels,
             rx,
         })
