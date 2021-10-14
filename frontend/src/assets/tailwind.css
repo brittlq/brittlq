@@ -5,5 +5,5 @@
 @tailwind utilities;
 
 .button-dark {
-  @apply bg-gray-900 border border-black hover:bg-gray-700 hover:border-gray-800 p-1 rounded-lg text-gray-100;
+  @apply bg-gray-900 border border-black hover:bg-gray-700 active:bg-gray-600 hover:border-gray-800 active:border-gray-700 p-1 rounded-lg text-gray-100 m-1;
 }
