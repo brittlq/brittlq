@@ -33,12 +33,12 @@ impl Channel {
                     return None;
                 }
                 tracing::info!("Added command for {}: {}", self.name, &command.name);
-                self.commands.insert(command.name, command.commands);
+                self.commands.insert(command.name, command.script);
                 Some(())
             }
             actions::CommandActions::Edit => {
                 tracing::info!("Edited command for {}: {}", self.name, &command.name);
-                self.commands.insert(command.name, command.commands);
+                self.commands.insert(command.name, command.script);
                 Some(())
             }
             actions::CommandActions::Remove => {

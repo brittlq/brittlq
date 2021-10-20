@@ -84,6 +84,7 @@ dependencies = [
  "reqwest",
  "serde 1.0.126",
  "serde_json",
+ "thiserror",
  "tokio",
  "tracing",
  "tracing-bunyan-formatter",
