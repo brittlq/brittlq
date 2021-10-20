@@ -91,24 +91,6 @@ async fn execute_actions(
     sender: &::irc::client::Sender,
     actions: &[BotAction],
 ) {
-    for action in actions {
-        match action {
-            BotAction::Say(msg) => {
-                if let Err(e) = sender.send_privmsg(trigger.target, msg) {
-                    tracing::error!(
-                        "Failed to send message to {}\n\tError:{}\n\tMessage:{}",
-                        trigger.target,
-                        e,
-                        msg
-                    );
-                }
-            }
-            BotAction::Wait(duration) => {
-                tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
-                    .await;
-            }
-        }
-    }
 }
 
 pub struct Bot {
@@ -165,7 +147,7 @@ impl Bot {
                                 if let Some(actions) = channel.extract_command(msg) {
                                     let msg =
                                         Message {
-                                            target: message.response_target().unwrap(),
+                                            target: message.response_target().unwrap_or(target),
                                             sender: message.source_nickname().unwrap(),
                                             message: msg,
                                         };
@@ -174,11 +156,15 @@ impl Bot {
                                     let name = command_editor.name.clone(); // TODO don't really need this clone here, we can be smart instead
                                     match channel.edit_commands(command_editor) {
                                         Some(_) => {
-                                            // TODO I dont' think we should just be `unwrap`ing these
-                                            sender.send_privmsg(message.response_target().unwrap(), format!("Command edit successful: {}", name));
+                                            sender.send_privmsg(message.response_target().unwrap_or(target), format!("Command edit successful: {}", name))
+                                                .map_err(|error| {
+                                                    tracing::error!("Failed to send message: {}", error);
+                                                }).ok();
                                         }
                                         None => {
-                                            sender.send_privmsg(message.response_target().unwrap(), format!("Command edit failed: {}", name));
+                                            sender.send_privmsg(message.response_target().unwrap_or(target), format!("Command edit failed: {}", name)).map_err(|error| {
+                                                tracing::error!("Failed to send message: {}", error);
+                                            }).ok();
                                         }
                                     }
                                 }

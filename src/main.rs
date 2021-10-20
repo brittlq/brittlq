@@ -1,4 +1,6 @@
-use brittlq::{chatbot, get_user_config, register_subscriber, server::endpoints, subscriber_init};
+use brittlq::{
+    chatbot, config::get_user_config, register_subscriber, server::endpoints, subscriber_init,
+};
 use std::process::Command;
 
 /* THE BIG TODO
@@ -71,9 +73,8 @@ async fn main() -> anyhow::Result<()> {
         auth = format!("oauth:{}", token.access_token);
     }
 
-    let mut bot = chatbot::Bot::new(get_user_config(&auth), chat_rx)
-        .await
-        .unwrap();
+    let runtime_config = get_user_config(&auth)?;
+    let mut bot = chatbot::Bot::new(runtime_config, chat_rx).await.unwrap();
 
     let bot_task = tokio::spawn(async move {
         chatbot::build_bot(&mut bot);

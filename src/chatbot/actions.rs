@@ -1,6 +1,8 @@
 use chrono::Duration;
 use std::str::FromStr;
 
+use super::Message;
+
 #[derive(Debug, PartialEq)]
 pub enum CommandActions {
     Add,
@@ -8,13 +10,63 @@ pub enum CommandActions {
     Remove,
 }
 
+pub enum AccessLevel {
+    User,
+    Moderator,
+    Broadcaster,
+}
+
+pub enum ExecutionError {
+    InsufficientAccessLevel {
+        required: AccessLevel,
+        actual: AccessLevel,
+    },
+    Cooldown(Duration),
+    Unknown,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Command {
     pub action: CommandActions,
     pub name: String,
-    pub commands: Vec<BotAction>,
+    pub script: Vec<BotAction>,
+    pub cooldown: Duration,
+    last_execution: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+impl Command {
+    pub async fn execute(
+        &mut self,
+        target: &str,
+        sender: &::irc::client::Sender,
+    ) -> Result<(), ExecutionError> {
+        let le = self.last_execution.unwrap_or(chrono::Utc::now() - self.cooldown);
+        let time_elapsed = chrono::Utc::now() - le;
+        if time_elapsed < self.cooldown {
+            return Err(ExecutionError::Cooldown(self.cooldown - time_elapsed));
+        }
+        self.last_execution = Some(chrono::Utc::now());
+        for action in &self.script {
+            match action {
+                BotAction::Say(msg) => {
+                    if let Err(e) = sender.send_privmsg(target, msg) {
+                        tracing::error!(
+                            "Failed to send message to {}\n\tError:{}\n\tMessage:{}",
+                            target,
+                            e,
+                            msg
+                        );
+                    }
+                }
+                BotAction::Wait(duration) => {
+                    tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
+                        .await;
+                }
+            }
+        }
+        Ok(())
+    }
+}
 enum CommandVariable {
     Username,
     QueueLength,
@@ -86,9 +138,11 @@ peg::parser! {
 
         rule identifier() -> &'input str = ident:$([^'\"' | '!' | ';' | ' ' | '\\']+) { ident }
 
-        rule variable() -> CommandVariable = "@@" ident:identifier() "&&" {? CommandVariable::from_str(ident) }
+        rule variable() -> CommandVariable = "@@" ident:identifier() "@@" {? CommandVariable::from_str(ident) }
 
         rule whitespace() = [' ' | '\t' | '\n']
+
+        rule cooldown() -> Duration = seperator() "cooldown" whitespace()+ seconds:seconds(0) { seconds }
 
         pub(crate) rule say() -> BotAction
             = "say" whitespace()+ m:string() { BotAction::Say(m.to_string()) }
@@ -116,12 +170,14 @@ peg::parser! {
         /// ```
         pub rule command() -> Command = "command" whitespace()+ action:command_action()   whitespace()+
                                                                command_name:identifier() whitespace()*
-                                                               commands:atom() ** seperator() {
+                                                               script:atom() ** seperator() cd:cooldown()? {
             let name = command_name.to_string();
             Command {
                 action,
                 name,
-                commands,
+                script,
+                cooldown: cd.unwrap_or(Duration::seconds(30)),
+                last_execution: None
             }
         }
     }
@@ -129,6 +185,22 @@ peg::parser! {
 
 #[cfg(test)]
 mod tests {
+    use chrono::Duration;
+
+    fn test_config() -> irc::client::prelude::Config {
+        irc::client::prelude::Config {
+            owners: vec![format!("test")],
+            nickname: Some(format!("test")),
+            alt_nicks: vec![format!("test2")],
+            server: Some(format!("irc.test.net")),
+            channels: vec![format!("#test"), format!("#test2")],
+            user_info: Some(format!("Testing.")),
+            use_mock_connection: true,
+            ..Default::default()
+        }
+    }
+
+
     use crate::chatbot::actions::{action_parser, BotAction, Command, CommandActions};
     #[test]
     fn say() {
@@ -186,7 +258,9 @@ mod tests {
             Ok(Command {
                 action: CommandActions::Add,
                 name: "hello".to_string(),
-                commands: vec![BotAction::Say("hello, world!".to_string())]
+                script: vec![BotAction::Say("hello, world!".to_string())],
+                cooldown: Duration::seconds(30),
+                last_execution: None
             })
         );
 
@@ -196,11 +270,13 @@ mod tests {
             Ok(Command {
                 action: CommandActions::Add,
                 name: String::from("hello_wait"),
-                commands: vec![
+                script: vec![
                     BotAction::Say("hello".to_string()),
                     BotAction::Wait(chrono::Duration::seconds(1)),
                     BotAction::Say("world!".to_string())
-                ]
+                ],
+                cooldown: Duration::seconds(30),
+                last_execution: None
             })
         );
 
@@ -210,7 +286,9 @@ mod tests {
             Ok(Command {
                 action: CommandActions::Add,
                 name: "hello_s".to_string(),
-                commands: vec![BotAction::Say("hello; world".to_string())]
+                script: vec![BotAction::Say("hello; world".to_string())],
+                cooldown: Duration::seconds(30),
+                last_execution: None
             })
         );
     }
@@ -222,7 +300,9 @@ mod tests {
             Ok(Command {
                 action: CommandActions::Edit,
                 name: "foo".to_string(),
-                commands: vec![BotAction::Say("bar".to_string())]
+                script: vec![BotAction::Say("bar".to_string())],
+                cooldown: Duration::seconds(30),
+                last_execution: None
             })
         )
     }
@@ -234,10 +314,30 @@ mod tests {
             Ok(Command {
                 action: CommandActions::Remove,
                 name: "foo".to_string(),
-                commands: vec![]
+                script: vec![],
+                cooldown: Duration::seconds(30),
+                last_execution: None
             })
         );
 
         assert!(action_parser::command("command remove").is_err());
+    }
+
+    #[test]
+    fn command_cooldown() {
+        let mut test = action_parser::command(r#"command add hello say "hello"; cooldown 60"#);
+        assert_eq!(
+            test,
+            Ok(Command {
+                action: CommandActions::Add,
+                name: "hello".to_string(),
+                script: vec![BotAction::Say("hello".to_string())],
+                cooldown: Duration::seconds(60),
+                last_execution: None
+            })
+        );
+
+        test.execute("test", )
+        
     }
 }

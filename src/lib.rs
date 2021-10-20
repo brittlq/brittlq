@@ -14,6 +14,7 @@ pub type StateTx = tokio::sync::mpsc::Sender<StateCommand>;
 pub type StateRx<T> = tokio::sync::oneshot::Receiver<T>;
 
 pub mod chatbot;
+pub mod config;
 pub mod server;
 
 #[derive(Debug)]
@@ -83,44 +84,6 @@ pub fn pop(num: u16, user_queue: &mut VecDeque<UserEntry>) -> Option<Vec<UserEnt
         None
     } else {
         Some(popped_entries)
-    }
-}
-
-pub fn get_user_config(token: &str) -> Config {
-    let mut settings = config::Config::default();
-    settings
-        .merge(config::File::with_name("Settings").required(false))
-        .unwrap()
-        .merge(config::Environment::with_prefix("TWITCH"))
-        .unwrap();
-    let config = settings.try_into::<HashMap<String, String>>().unwrap();
-
-    let name = match config.get("name") {
-        Some(n) => n,
-        None => {
-            panic!("Expected `name` in Settings.toml or TWITCH_NAME environment variable");
-        }
-    };
-    let channel = match config.get("channel") {
-        Some(n) => {
-            if n.starts_with('#') {
-                n.clone()
-            } else {
-                format!("#{}", n)
-            }
-        }
-        None => {
-            panic!("Expected `channel` in Settings.toml or TWITCH_CHANNEL environment variable");
-        }
-    };
-
-    Config {
-        nickname: Some(name.clone()),
-        password: Some(token.to_owned()),
-        server: Some("irc.chat.twitch.tv".to_owned()),
-        port: Some(6697),
-        channels: vec![channel],
-        ..Default::default()
     }
 }
 
