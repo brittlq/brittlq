@@ -25,11 +25,11 @@ pub fn get_user_config(token: &str) -> Result<Config, SettingsError> {
 
     let channel = config
         .get("channel")
-        .and_then(|n| {
+        .map(|n| {
             if n.starts_with('#') {
-                Some(n.clone())
+                n.clone()
             } else {
-                Some(format!("#{}", n))
+                format!("#{}", n)
             }
         })
         .ok_or(SettingsError::MissingSetting("channel"))?;
