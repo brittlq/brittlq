@@ -6,12 +6,9 @@
     <button
       class="button-dark"
       @click="$emit('toggleOpen', $event)"
-      v-if="isOpen"
+      v-text="isOpen ? 'Close' : 'Open'"
     >
       Close
-    </button>
-    <button class="button-dark" @click="$emit('toggleOpen', $event)" v-else>
-      Open
     </button>
     <a :href="oauthUri" class="button-dark text-center">
       Connect to Twitch
