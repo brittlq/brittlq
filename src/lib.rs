@@ -1,8 +1,7 @@
 use chrono::prelude::*;
 use chrono::Local;
-use irc::client::prelude::*;
 use serde::{Deserialize, Serialize, Serializer};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use tokio::sync::oneshot;
 use tracing::{subscriber::set_global_default, Subscriber};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};

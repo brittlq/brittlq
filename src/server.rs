@@ -198,28 +198,7 @@ pub mod endpoints {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        init_state,
-        {chatbot, server::endpoints, StateCommand},
-    };
-
-    struct Txs {
-        state_tx: tokio::sync::mpsc::Sender<StateCommand>,
-        state_rx: tokio::sync::mpsc::Receiver<StateCommand>,
-        chat_tx: chatbot::Tx,
-        _chat_rx: chatbot::Rx,
-    }
-
-    fn init_tx() -> Txs {
-        let (state_tx, state_rx) = tokio::sync::mpsc::channel(1);
-        let (chat_tx, _chat_rx) = tokio::sync::mpsc::channel(1);
-        Txs {
-            state_tx,
-            state_rx,
-            chat_tx,
-            _chat_rx,
-        }
-    }
+    use crate::server::endpoints;
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn get_health_check_200() {

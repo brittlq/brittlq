@@ -1,18 +1,14 @@
 use crate::{StateCommand, StateTx, Token};
 use async_trait::async_trait;
-use chrono::Duration;
 use futures::prelude::*;
 mod irc {
     pub use irc::{client::prelude::*, error::*};
 }
+use self::commands::Channel;
 use std::collections::HashMap;
 
 pub mod actions;
 pub mod commands;
-
-use actions::BotAction;
-
-use self::commands::Channel;
 
 #[derive(Debug)]
 pub enum Commands {
@@ -86,13 +82,6 @@ impl std::fmt::Display for QueuePos<'_> {
     }
 }
 
-async fn execute_actions(
-    trigger: Message<'_>,
-    sender: &::irc::client::Sender,
-    actions: &[BotAction],
-) {
-}
-
 pub struct Bot {
     channel: String,
     client: irc::Client,
@@ -130,7 +119,7 @@ impl Bot {
     }
 
     // run the bot until its done
-    pub async fn run(&mut self, tx: StateTx) -> anyhow::Result<()> {
+    pub async fn run(&mut self, _tx: StateTx) -> anyhow::Result<()> {
         tracing::debug!("starting main loop");
         let mut stream = self.client.stream()?;
         let sender = self.client.sender();
@@ -144,14 +133,11 @@ impl Bot {
                         irc::Command::PRIVMSG(ref target, ref msg) =>
                         {
                             if let Some(channel) = self.channels.get_mut(target) {
-                                if let Some(actions) = channel.extract_command(msg) {
-                                    let msg =
-                                        Message {
-                                            target: message.response_target().unwrap_or(target),
-                                            sender: message.source_nickname().unwrap(),
-                                            message: msg,
-                                        };
-                                    execute_actions(msg, &sender, actions).await;
+                                let channel_name = channel.name.clone();
+                                if let Some(command) = channel.extract_command(msg).as_mut() {
+                                    command.execute(message.response_target().unwrap_or(target), &sender)
+                                        .await
+                                        .unwrap_or_else(|e| tracing::error!("{}: {} failed, {:?}", &channel_name, &command.name, e));
                                 } else if let Ok(command_editor) = actions::action_parser::command(&msg[1..]) {
                                     let name = command_editor.name.clone(); // TODO don't really need this clone here, we can be smart instead
                                     match channel.edit_commands(command_editor) {
