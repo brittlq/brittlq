@@ -13,10 +13,7 @@
     <button class="button-dark" @click="$emit('toggleOpen', $event)" v-else>
       Open
     </button>
-    <a
-      :href="`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&force_verify=${forceVerify}&claims=${claims}`"
-      class="button-dark text-center"
-    >
+    <a :href="oauthUri" class="button-dark text-center">
       Connect to Twitch
       <font-awesome-icon :icon="['fab', 'twitch']" />
     </a>
@@ -30,22 +27,29 @@
     </div>
     <div class="flex flex-col">
       <label class="font-bold">Group Size</label>
-      <input
-        class="border border-gray-900 rounded p-1"
-        v-model="popSize"
-        placeholder="4"
-      />
+      <input type="text" class="rounded" v-model="popSize" placeholder="4" />
     </div>
   </nav>
 </template>
 
 <script>
-const axios = require('axios').default;
 export default {
   name: 'QueueControls',
+  emits: ['toggleOpen', 'queuePop'],
+  props: {
+    queueLength: {
+      required: true,
+      type: Number,
+    },
+    startOpen: {
+      required: true,
+      type: Boolean,
+    },
+  },
   data() {
     return {
       isDisabled: false,
+      isOpen: this.startOpen,
       popSize: 4,
       clientId: 've3e62dc7m49kd61qhiz4zt6p3sduk',
       redirectUri: 'http://localhost:9081',
@@ -59,6 +63,16 @@ export default {
     timeLeftInQueue() {
       return Math.floor(this.queueLength / this.popSize) * 5;
     },
+    oauthUri() {
+      const url = new URL('/oauth2/authorize', 'https://id.twitch.tv');
+      url.searchParams.set('client_id', this.clientId);
+      url.searchParams.set('redirect_uri', this.redirectUri);
+      url.searchParams.set('response_type', this.responseType);
+      url.searchParams.set('scope', this.scope);
+      url.searchParams.set('force_verify', this.forceVerify);
+      url.searchParams.set('claims', this.claims);
+      return url.toString();
+    },
   },
   methods: {
     async next(event) {
@@ -66,7 +80,7 @@ export default {
         if (event) {
           this.isDisabled = true;
           const url = `/queue/pop?count=${this.popSize}`;
-          const { data } = await axios.get(url);
+          const { data } = await this.$axios.get(url);
           this.$emit('queuePop', data);
         }
       } catch (exc) {
@@ -78,7 +92,7 @@ export default {
     async toggleOpen(event) {
       if (event) {
         try {
-          const { data } = axios.get('/queue/toggle');
+          const { data } = this.$axios.get('/queue/toggle');
           console.log(data);
           this.isOpen = data.isOpen;
           this.$emit('toggleOpen', data);
@@ -88,16 +102,5 @@ export default {
       }
     },
   },
-  props: {
-    queueLength: {
-      required: true,
-      type: Number,
-    },
-    isOpen: {
-      required: true,
-      type: Boolean,
-    },
-  },
-  emits: ['toggleOpen', 'queuePop'],
 };
 </script>

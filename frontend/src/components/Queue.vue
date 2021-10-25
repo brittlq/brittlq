@@ -3,7 +3,7 @@
     <QueueControls
       :queue-length="queue.length"
       @queuePop="queuePop"
-      :is-open="isOpen"
+      :start-open="isOpen"
     />
     <table class="queue table-auto">
       <thead>
