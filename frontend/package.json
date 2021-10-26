@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --port 8000",
+    "serve": "vue-cli-service serve --port 8000 --watch",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "watch": "vue-cli-service build --mode dev --watch"
@@ -13,7 +13,9 @@
     "@fortawesome/free-brands-svg-icons": "^5.15.3",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/vue-fontawesome": "^3.0.0-3",
+    "@headlessui/vue": "^1.4.1",
     "@tailwindcss/postcss7-compat": "^2.0.2",
+    "@tailwindcss/forms": "^0.3.4",
     "autoprefixer": "^9",
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
