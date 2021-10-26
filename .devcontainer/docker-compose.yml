@@ -11,7 +11,6 @@ services:
     security_opt:
       - seccomp:unconfined
     command: sleep infinity
-    network_mode: service:nginx
     env_file: ./devcontainer.env
   db:
     image: "postgres:13"
@@ -19,15 +18,14 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file: ./devcontainer.env
-    network_mode: service:nginx
+    network_mode: service:rust-dev
   nginx:
     build:
       context: .
       dockerfile: webserver.dockerfile
     restart: unless-stopped
     env_file: ./devcontainer.env
-    ports:
-      - "8000:80"
+    network_mode: service:rust-dev
 
 volumes:
   db_data:
