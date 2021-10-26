@@ -7,9 +7,7 @@
       class="button-dark"
       @click="$emit('toggleOpen', $event)"
       v-text="isOpen ? 'Close' : 'Open'"
-    >
-      Close
-    </button>
+    ></button>
     <a :href="oauthUri" class="button-dark text-center">
       Connect to Twitch
       <font-awesome-icon :icon="['fab', 'twitch']" />
@@ -52,7 +50,7 @@ export default {
       redirectUri: 'http://localhost:9081',
       claims: '{"id_token":{"email":null,"email_verified":null }}',
       forceVerify: 'true',
-      scope: 'chat:read+chat:edit',
+      scope: 'chat:read chat:edit',
       responseType: 'token',
     };
   },
@@ -67,7 +65,7 @@ export default {
       url.searchParams.set('response_type', this.responseType);
       url.searchParams.set('scope', this.scope);
       url.searchParams.set('force_verify', this.forceVerify);
-      url.searchParams.set('claims', this.claims);
+      url.searchParams.set('claims', encodeURIComponent(this.claims));
       return url.toString();
     },
   },
