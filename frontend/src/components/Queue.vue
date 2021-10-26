@@ -70,7 +70,7 @@ export default {
   methods: {
     async poll() {
       try {
-        const { data } = await axios.get('/queue');
+        const { data } = await axios.get('/queue/');
         this.queue = data.queue;
         this.is_open = data.is_open;
       } catch (exc) {
