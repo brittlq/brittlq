@@ -18,17 +18,18 @@
   "shutdownAction": "stopCompose",
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
-    "bungcip.better-toml",
-    "serayuzgur.crates",
-    "mutantdino.resourcemonitor",
-    "matklad.rust-analyzer",
-    "dbaeumer.vscode-eslint",
-    "vadimcn.vscode-lldb",
-    "octref.vetur",
-    "editorconfig.editorconfig",
-    "esbenp.prettier-vscode",
-    "bradlc.vscode-tailwindcss"
-  ],
+	"bungcip.better-toml",
+	"serayuzgur.crates",
+	"mutantdino.resourcemonitor",
+	"matklad.rust-analyzer",
+	"dbaeumer.vscode-eslint",
+	"vadimcn.vscode-lldb",
+	"octref.vetur",
+	"editorconfig.editorconfig",
+	"esbenp.prettier-vscode",
+	"bradlc.vscode-tailwindcss",
+	"eamodio.gitlens"
+],
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [8080, 5432],
