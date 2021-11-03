@@ -37,6 +37,10 @@ brittlq starts with the queue closed. Click the Open button to allow users in ch
 - `!next` - User: peek at the upcoming group. Does not modify the queue.
 - `!place` - User: get their position in the queue, with an estimated wait time.
 
+## Developing
+
+To set environment variables for the frontend application copy `frontend/.env.local.base` to `frontend/.env.local` and set your Twitch client id and redirect uri there.
+
 ## Roadmap
 
 - [x] Add ability to change party size. Not really necessary in its current use case, this would just make the bot less brittle
