@@ -46,8 +46,6 @@ export default {
       isDisabled: false,
       isOpen: this.startOpen,
       popSize: 4,
-      clientId: 've3e62dc7m49kd61qhiz4zt6p3sduk',
-      redirectUri: 'http://localhost:9081',
       claims: '{"id_token":{"email":null,"email_verified":null }}',
       forceVerify: 'true',
       scope: 'chat:read chat:edit',
@@ -60,8 +58,11 @@ export default {
     },
     oauthUri() {
       const url = new URL('/oauth2/authorize', 'https://id.twitch.tv');
-      url.searchParams.set('client_id', this.clientId);
-      url.searchParams.set('redirect_uri', this.redirectUri);
+      url.searchParams.set('client_id', this.settings?.oauth?.twitch?.clientId);
+      url.searchParams.set(
+        'redirect_uri',
+        this.settings?.oauth?.twitch?.redirectUri
+      );
       url.searchParams.set('response_type', this.responseType);
       url.searchParams.set('scope', this.scope);
       url.searchParams.set('force_verify', this.forceVerify);

@@ -10,8 +10,18 @@ import './assets/tailwind.css';
 library.add(faMinusCircle);
 library.add(faTwitch);
 
-const app = createApp(App) /*.use(router)*/
+createApp(App) /*.use(router)*/
   .component('font-awesome-icon', FontAwesomeIcon)
-  .mount('#app');
+  .use((app) => {
+    app.config.globalProperties.$axios = axios;
 
-app.config.globalProperties.$axios = axios;
+    app.config.globalProperties.settings = {
+      oauth: {
+        twitch: {
+          clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,
+          redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI,
+        },
+      },
+    };
+  })
+  .mount('#app');
