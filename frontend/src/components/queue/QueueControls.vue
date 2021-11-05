@@ -1,22 +1,22 @@
 <template>
-  <nav class="flex flex-col">
-    <button class="button-dark" @click="next" :disabled="isDisabled">
+  <nav>
+    <button class="button-dark w-1/6" @click="next" :disabled="isDisabled">
       Next
     </button>
     <button
-      class="button-dark"
+      class="button-dark w-1/6"
       @click="$emit('toggleOpen', $event)"
       v-text="isOpen ? 'Close' : 'Open'"
     ></button>
-    <div class="flex flex-col">
+    <div class="flex flex-col w-1/6">
       <span class="font-bold">Queue size</span>
       <div>{{ queueLength }}</div>
     </div>
-    <div class="flex flex-col">
+    <div class="flex flex-col w-1/6">
       <span class="font-bold">Time remaining</span>
       <div>{{ timeLeftInQueue }} minutes</div>
     </div>
-    <div class="flex flex-col">
+    <div class="flex flex-col w-1/6">
       <label class="font-bold">Group Size</label>
       <input type="text" class="rounded" v-model="popSize" placeholder="4" />
     </div>
@@ -54,7 +54,7 @@ export default {
       try {
         if (event) {
           this.isDisabled = true;
-          const url = `/queue/pop?count=${this.popSize}`;
+          const url = `/api/queue/pop?count=${this.popSize}`;
           const { data } = await this.$axios.get(url);
           this.$emit('queuePop', data);
         }
@@ -67,7 +67,7 @@ export default {
     async toggleOpen(event) {
       if (event) {
         try {
-          const { data } = this.$axios.get('/queue/toggle');
+          const { data } = await this.$axios.get('/api/queue/toggle');
           console.log(data);
           this.isOpen = data.isOpen;
           this.$emit('toggleOpen', data);
