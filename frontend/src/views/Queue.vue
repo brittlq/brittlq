@@ -1,10 +1,17 @@
 <template>
-  <div class="flex flex-row gap-2">
+  <div class="flex flex-col gap-2">
     <QueueControls
       :queue-length="queue.length"
       @queuePop="queuePop"
       :start-open="isOpen"
-      class="w-1/6 p-2 border-r border-gray-900 h-screen bg-gray-200"
+      class="
+        flex flex-row
+        justify-around
+        w-full
+        p-2
+        border-b border-gray-900
+        bg-gray-200
+      "
     />
     <table class="queue table-auto flex-1">
       <thead>
