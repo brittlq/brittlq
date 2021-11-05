@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@headlessui/vue": "^1.4.1",
-    "@tailwindcss/forms": "^0.3.4"
-  }
-}
