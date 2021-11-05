@@ -7,11 +7,13 @@ import axios from 'axios';
 import App from './App.vue';
 import './assets/tailwind.css';
 import store from './store';
+import router from './router';
 
 library.add(faMinusCircle);
 library.add(faTwitch);
 
-createApp(App) /*.use(router)*/
+createApp(App)
+  .use(router)
   .use(store)
   .component('font-awesome-icon', FontAwesomeIcon)
   .use((app) => {
