@@ -4,6 +4,8 @@ import token from './get-token';
 export default createStore({
   state: {
     token: token,
+    botName: process.env.VUE_APP_BOT_NAME,
+    channel: process.env.VUE_APP_TWITCH_CHANNEL,
     oauth: {
       twitch: {
         clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,

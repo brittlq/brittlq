@@ -21,6 +21,8 @@ createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)
   .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
-    app.config.globalProperties.$axios = axios;
+    app.config.globalProperties.$axios = axios.create({
+      baseURL: process.env.VUE_APP_API_BASE,
+    });
   })
   .mount('#app');
