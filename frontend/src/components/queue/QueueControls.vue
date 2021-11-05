@@ -8,10 +8,6 @@
       @click="$emit('toggleOpen', $event)"
       v-text="isOpen ? 'Close' : 'Open'"
     ></button>
-    <a :href="oauthUri" class="button-dark text-center">
-      Connect to Twitch
-      <font-awesome-icon :icon="['fab', 'twitch']" />
-    </a>
     <div class="flex flex-col">
       <span class="font-bold">Queue size</span>
       <div>{{ queueLength }}</div>
@@ -46,28 +42,11 @@ export default {
       isDisabled: false,
       isOpen: this.startOpen,
       popSize: 4,
-      claims: '{"id_token":{"email":null,"email_verified":null }}',
-      forceVerify: 'true',
-      scope: 'chat:read chat:edit',
-      responseType: 'token',
     };
   },
   computed: {
     timeLeftInQueue() {
       return Math.floor(this.queueLength / this.popSize) * 5;
-    },
-    oauthUri() {
-      const url = new URL('/oauth2/authorize', 'https://id.twitch.tv');
-      url.searchParams.set('client_id', this.settings?.oauth?.twitch?.clientId);
-      url.searchParams.set(
-        'redirect_uri',
-        this.settings?.oauth?.twitch?.redirectUri
-      );
-      url.searchParams.set('response_type', this.responseType);
-      url.searchParams.set('scope', this.scope);
-      url.searchParams.set('force_verify', this.forceVerify);
-      url.searchParams.set('claims', encodeURIComponent(this.claims));
-      return url.toString();
     },
   },
   methods: {

@@ -1,6 +1,10 @@
 import { createApp } from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faMinusCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faMinusCircle,
+  faChevronDown,
+  faChevronUp,
+} from '@fortawesome/free-solid-svg-icons';
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import axios from 'axios';
@@ -9,23 +13,14 @@ import './assets/tailwind.css';
 import store from './store';
 import router from './router';
 
-library.add(faMinusCircle);
-library.add(faTwitch);
+library.add(faMinusCircle, faTwitch, faChevronDown, faChevronUp);
 
 createApp(App)
   .use(router)
   .use(store)
   .component('font-awesome-icon', FontAwesomeIcon)
+  .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
     app.config.globalProperties.$axios = axios;
-
-    app.config.globalProperties.settings = {
-      oauth: {
-        twitch: {
-          clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,
-          redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI,
-        },
-      },
-    };
   })
   .mount('#app');

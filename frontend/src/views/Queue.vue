@@ -4,7 +4,7 @@
       :queue-length="queue.length"
       @queuePop="queuePop"
       :start-open="isOpen"
-      class="w-1/6 p-2"
+      class="w-1/6 p-2 border-r border-gray-900 h-screen bg-gray-200"
     />
     <table class="queue table-auto flex-1">
       <thead>
@@ -30,8 +30,8 @@
 </template>
 
 <script>
-import QueueEntry from './QueueEntry.vue';
-import QueueControls from './QueueControls.vue';
+import QueueEntry from '@/components/queue/QueueEntry.vue';
+import QueueControls from '@/components/queue/QueueControls.vue';
 
 const axios = require('axios').default;
 
@@ -43,25 +43,6 @@ export default {
   },
   created() {},
   mounted() {
-    var hash_parameters = location.hash.substr(1);
-    if (hash_parameters.length > 0) {
-      var result = hash_parameters.split('&').reduce((res, item) => {
-        var parts = item.split('=');
-        res[parts[0]] = parts[1];
-        return res;
-      }, {});
-      axios
-        .post('/queue/token', JSON.stringify(result), {
-          headers: { 'content-type': 'application/json' },
-        })
-        .then((result) => {
-          console.log(result);
-          this.isConnected = true;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
     //TODO: convert this to a websocket server? Avoids uneccessary network overhead
     // this.intervalId = window.setInterval(this.poll, 4000);
   },
