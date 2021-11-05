@@ -1,11 +1,12 @@
 <template>
-  <div class="flex flex-row">
+  <div class="flex flex-row gap-2">
     <QueueControls
       :queue-length="queue.length"
       @queuePop="queuePop"
       :start-open="isOpen"
+      class="w-1/6 p-2"
     />
-    <table class="queue table-auto">
+    <table class="queue table-auto flex-1">
       <thead>
         <tr>
           <th class="p-1">#</th>
@@ -62,7 +63,7 @@ export default {
         });
     }
     //TODO: convert this to a websocket server? Avoids uneccessary network overhead
-    this.intervalId = window.setInterval(this.poll, 4000);
+    // this.intervalId = window.setInterval(this.poll, 4000);
   },
   unmounted() {
     window.clearInterval(this.intervalId);
