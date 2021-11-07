@@ -1,5 +1,13 @@
 <template>
-  <div class="flex flex-col overflow-y-scroll">
+  <div
+    :class="[
+      'transition-width',
+      'flex',
+      'flex-col overflow-y-scroll',
+      'relative',
+      { closed: !open },
+    ]"
+  >
     <message
       v-for="message in messages"
       :key="message.id"
@@ -11,6 +19,7 @@
 <script>
 import Message from './Message.vue';
 import { Client } from 'tmi.js';
+import { mapState } from 'vuex';
 export default {
   components: { Message },
   data() {
@@ -61,8 +70,15 @@ export default {
     clientId() {
       return this.$store.state.oauth.twitch.clientId;
     },
+    ...mapState({
+      open: 'chatSidebarOpen',
+    }),
   },
 };
 </script>
 
-<style></style>
+<style scoped>
+.closed {
+  @apply w-0;
+}
+</style>

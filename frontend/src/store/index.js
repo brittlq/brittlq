@@ -1,4 +1,5 @@
 import { createStore } from 'vuex';
+import { TOGGLE_CHAT_SIDEBAR } from './mutations';
 import token from './get-token';
 
 export default createStore({
@@ -6,6 +7,7 @@ export default createStore({
     token: token,
     botName: process.env.VUE_APP_BOT_NAME,
     channel: process.env.VUE_APP_TWITCH_CHANNEL,
+    chatSidebarOpen: true, //TODO: this should come from application state, either stored in the backend or on the client
     oauth: {
       twitch: {
         clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,
@@ -32,7 +34,11 @@ export default createStore({
       return url.toString();
     },
   },
-  mutations: {},
+  mutations: {
+    [TOGGLE_CHAT_SIDEBAR](state) {
+      state.chatSidebarOpen = !state.chatSidebarOpen;
+    },
+  },
   actions: {},
   modules: {},
 });

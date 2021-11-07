@@ -8,7 +8,7 @@
         @click="$emit('remove-user', entry)"
         class="btn btn-outline-danger"
       >
-        <font-awesome-icon icon="minus-circle" />
+        <fa-icon icon="minus-circle" />
         remove
       </button>
     </td>

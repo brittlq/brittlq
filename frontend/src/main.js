@@ -4,6 +4,8 @@ import {
   faMinusCircle,
   faChevronDown,
   faChevronUp,
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -13,12 +15,19 @@ import './assets/tailwind.css';
 import store from './store';
 import router from './router';
 
-library.add(faMinusCircle, faTwitch, faChevronDown, faChevronUp);
+library.add(
+  faMinusCircle,
+  faTwitch,
+  faChevronDown,
+  faChevronUp,
+  faAngleDoubleRight,
+  faAngleDoubleLeft
+);
 
 createApp(App)
   .use(router)
   .use(store)
-  .component('font-awesome-icon', FontAwesomeIcon)
+  // .component('font-awesome-icon', FontAwesomeIcon)
   .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
     app.config.globalProperties.$axios = axios.create({
