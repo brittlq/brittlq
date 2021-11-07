@@ -28,7 +28,9 @@
     "editorconfig.editorconfig",
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
-    "eamodio.gitlens"
+    "eamodio.gitlens",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg"
   ],
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
