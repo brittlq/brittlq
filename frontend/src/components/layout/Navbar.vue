@@ -34,8 +34,8 @@
         ]"
       >
         Profile
-        <font-awesome-icon v-if="open" :icon="['fas', 'chevron-up']" />
-        <font-awesome-icon v-else :icon="['fas', 'chevron-down']" />
+        <fa-icon v-if="open" :icon="['fas', 'chevron-up']" />
+        <fa-icon v-else :icon="['fas', 'chevron-down']" />
       </MenuButton>
       <MenuItems
         class="
@@ -60,7 +60,7 @@
             ]"
           >
             Connect to Twitch
-            <font-awesome-icon :icon="['fab', 'twitch']" />
+            <fa-icon :icon="['fab', 'twitch']" />
           </a>
         </MenuItem>
         <MenuItem v-slot="{ active }">
@@ -79,12 +79,24 @@
         </MenuItem>
       </MenuItems>
     </Menu>
+    <button type="button" @click="toggleChat" class="px-4">
+      <fa-icon
+        :icon="['fas', 'angle-double-right']"
+        :aria-label="chatOpen ? 'Hide Chat' : 'Show Chat'"
+        :class="[
+          'transition-transform',
+          'transform',
+          { 'rotate-180': !chatOpen },
+        ]"
+      />
+    </button>
   </nav>
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapMutations, mapState } from 'vuex';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
+import { TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
 export default {
   components: {
     Menu,
@@ -94,6 +106,14 @@ export default {
   },
   computed: {
     ...mapGetters(['twitchOauthUri']),
+    ...mapState({
+      chatOpen: 'chatSidebarOpen',
+    }),
+  },
+  methods: {
+    ...mapMutations({
+      toggleChat: TOGGLE_CHAT_SIDEBAR,
+    }),
   },
 };
 </script>
