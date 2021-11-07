@@ -5,6 +5,7 @@
       'flex',
       'flex-col overflow-y-scroll',
       'relative',
+      'duration-300',
       { closed: !open },
     ]"
   >

@@ -82,10 +82,12 @@
     <button type="button" @click="toggleChat" class="px-4">
       <fa-icon
         :icon="['fas', 'angle-double-right']"
-        :aria-label="chatOpen ? 'Hide Chat' : 'Show Chat'"
+        :aria-label="toggleChatLabel"
+        :title="toggleChatLabel"
         :class="[
           'transition-transform',
           'transform',
+          'delay-300',
           { 'rotate-180': !chatOpen },
         ]"
       />
@@ -105,6 +107,9 @@ export default {
     MenuItem,
   },
   computed: {
+    toggleChatLabel() {
+      return this.chatOpen ? 'Hide Chat' : 'Show Chat';
+    },
     ...mapGetters(['twitchOauthUri']),
     ...mapState({
       chatOpen: 'chatSidebarOpen',
