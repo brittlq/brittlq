@@ -1,7 +1,13 @@
+import Axios from 'axios';
 import { createStore } from 'vuex';
 import { TOGGLE_CHAT_SIDEBAR } from './mutations';
 import token from './get-token';
 
+const axios = Axios.create({
+  baseURL: process.env.VUE_APP_API_BASE,
+});
+
+export { axios };
 export default createStore({
   state: {
     token: token,

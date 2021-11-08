@@ -1,4 +1,4 @@
-const { default: axios } = require('axios');
+import { axios } from './index';
 
 let token = null;
 
