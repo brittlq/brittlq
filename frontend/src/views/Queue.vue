@@ -40,8 +40,6 @@
 import QueueEntry from '@/components/queue/QueueEntry.vue';
 import QueueControls from '@/components/queue/QueueControls.vue';
 
-const axios = require('axios').default;
-
 export default {
   name: 'Queue',
   components: { QueueControls, QueueEntry },
@@ -59,9 +57,9 @@ export default {
   methods: {
     async poll() {
       try {
-        const { data } = await axios.get('/queue/');
+        const { data } = await this.$axios.get('/queue/');
         this.queue = data.queue;
-        this.is_open = data.is_open;
+        this.isOpen = data.is_open;
       } catch (exc) {
         console.error(exc);
       }
