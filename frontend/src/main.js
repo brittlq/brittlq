@@ -9,10 +9,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import axios from 'axios';
 import App from './App.vue';
 import './assets/tailwind.css';
-import store from './store';
+import store, { axios } from './store';
 import router from './router';
 
 library.add(
@@ -30,8 +29,6 @@ createApp(App)
   // .component('font-awesome-icon', FontAwesomeIcon)
   .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
-    app.config.globalProperties.$axios = axios.create({
-      baseURL: process.env.VUE_APP_API_BASE,
-    });
+    app.config.globalProperties.$axios = axios;
   })
   .mount('#app');
