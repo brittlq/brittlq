@@ -14,8 +14,13 @@ pub struct NextQueryArg {
     count: Option<u16>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UpdateTimeArg {
+    minutes: Option<u16>,
+}
+
 mod handlers {
-    use super::{dispatch, NextQueryArg};
+    use super::{NextQueryArg, UpdateTimeArg, dispatch};
     use crate::utils::{
         chatbot::{self, Commands},
         StateCommand, StateTx, Token,
@@ -55,6 +60,15 @@ mod handlers {
             .await
             .unwrap();
         Ok(warp::reply::json(&queue_status))
+    }
+
+    pub async fn update_time(
+        args: UpdateTimeArg,
+        tx: StateTx,
+    ) -> Result<impl warp::Reply, Infallible> {
+        let minutes = args.minutes.unwrap_or(5);
+        tx.send(StateCommand::PartyTime(minutes)).await;
+        Ok(warp::reply())
     }
 
     pub async fn pop_queue(
@@ -100,7 +114,7 @@ mod handlers {
 
 pub mod endpoints {
     use super::{handlers, NextQueryArg, StateTx};
-    use crate::utils::chatbot;
+    use crate::utils::{chatbot, server::UpdateTimeArg};
 
     use warp::Filter;
 
@@ -112,7 +126,8 @@ pub mod endpoints {
             .or(queue_pop(tx.clone(), chatbot_tx.clone()))
             .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
             .or(token(chatbot_tx))
-            .or(user_delete(tx))
+            .or(user_delete(tx.clone()))
+            .or(update_time(tx))
             .or(warp::fs::dir("./www/dist/"))
     }
 
@@ -156,6 +171,18 @@ pub mod endpoints {
             .and(with_tx(chatbot_tx))
             .and_then(handlers::toggle_queue)
     }
+
+    // PUT /queue/time?:u16
+    pub fn update_time(
+        tx: StateTx,
+    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+        warp::path!("queue" / "time")
+            .and(warp::put())
+            .and(warp::query::<UpdateTimeArg>())
+            .and(with_tx(tx))
+            .and_then(handlers::update_time)
+    }
+
     // GET /queue/pop?:u16
     pub fn queue_pop(
         tx: StateTx,

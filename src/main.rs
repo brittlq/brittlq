@@ -1,5 +1,8 @@
 use chrono::prelude::*;
 use simple_logger::SimpleLogger;
+use std::sync::Arc;
+use std::sync::atomic::AtomicU16;
+use std::sync::atomic::Ordering;
 use std::collections::VecDeque;
 use std::process::Command;
 use uuid::Uuid;
@@ -52,15 +55,19 @@ async fn main() -> anyhow::Result<()> {
         .init()
         .unwrap();
 
+    let party_time = Arc::new(AtomicU16::new(5));
+
     let (state_tx, mut state_rx) = tokio::sync::mpsc::channel(32);
     let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
     let bot_state_tx = state_tx.clone();
 
+    let p = party_time.clone();
     let state_task = tokio::spawn(async move {
         use crate::utils::{find, StateCommand::*, UserEntry};
         let mut state = Queue {
             queue: VecDeque::new(),
             is_open: false,
+            party_time: p,
         };
 
         while let Some(command) = state_rx.recv().await {
@@ -110,6 +117,10 @@ async fn main() -> anyhow::Result<()> {
                     state.is_open = !state.is_open;
                     tx.send(state.is_open).unwrap();
                 }
+                PartyTime(minutes) => 
+                {
+                    state.party_time.store(minutes, Ordering::Relaxed);
+                }
             }
         }
         Ok(()) as anyhow::Result<()>
@@ -136,7 +147,7 @@ async fn main() -> anyhow::Result<()> {
         auth = format!("oauth:{}", token.access_token);
     }
 
-    let mut bot = chatbot::Bot::new(get_user_config(&auth), chat_rx)
+    let mut bot = chatbot::Bot::new(get_user_config(&auth), chat_rx, party_time)
         .await
         .unwrap();
 

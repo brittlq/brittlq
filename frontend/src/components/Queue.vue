@@ -12,8 +12,22 @@
         </a>
         <strong>Queue size</strong>{{ queue.length }}
         <strong>Time remaining</strong
-        >{{ Math.floor(queue.length / 4) * 5 }} minutes
-        <input class="form-control form-control-dark" v-model="pop_size" placeholder="Party size">
+        >{{ Math.floor(queue.length / 4) * party_time }} minutes
+        <label for="party_size">Party size</label>
+        <input
+          class="form-control form-control-dark"
+          v-model="pop_size"
+          id="party_size"
+          placeholder="4"
+        />
+        <label for="party_time">Minutes per party</label>
+        <input
+          class="form-control form-control-dark"
+          v-model="party_time"
+          @change="update_time"
+          id="party_time"
+          placeholder="5"
+        />
       </nav>
     </div>
     <div>
@@ -80,7 +94,7 @@ export default {
     );
   },
   data() {
-    return { is_disabled: false, pop_size: 4, is_open: false, queue: [] };
+    return { is_disabled: false, pop_size: 4, is_open: false, queue: [], party_time: 5 };
   },
   mounted() {
     var hash_parameters = location.hash.substr(1);
@@ -117,6 +131,17 @@ export default {
           method: "DELETE",
         }).then((response) => {
           console.log("Confirmed removal of ", response);
+        });
+      }
+    },
+    update_time(event) {
+      if (event) {
+        let url = `http://localhost:8080/queue/time?minutes=${this.party_time}`
+        fetch(url, {
+          method: "PUT"
+        })
+        .catch((err) => {
+          console.error(err);
         });
       }
     },

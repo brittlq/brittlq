@@ -5,7 +5,7 @@ mod irc {
     pub use irc::client::prelude::*;
     pub use irc::error::*;
 }
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, atomic::{AtomicU16, Ordering}}};
 
 #[derive(Debug)]
 pub enum Commands {
@@ -27,6 +27,7 @@ pub struct Args<'a> {
     pub writer: &'a irc::Sender,
     pub rx: &'a Rx,
     pub state_tx: &'a StateTx,
+    pub party_time: u16,
 }
 
 #[async_trait]
@@ -69,7 +70,7 @@ impl std::fmt::Display for QueuePos<'_> {
                     index + 1,
                     leading_groups_preamble,
                     wait_time,
-                    wait_time + 5
+                    wait_time + self.wait_per_group
                 )
             }
             None => {
@@ -84,10 +85,15 @@ pub struct Bot {
     client: irc::Client,
     commands: HashMap<String, Box<dyn Handler>>,
     rx: Rx,
+    party_time: Arc<AtomicU16>,
 }
 
 impl Bot {
-    pub async fn new(user_config: irc::Config, rx: Rx) -> Result<Bot, irc::Error> {
+    pub async fn new(
+        user_config: irc::Config,
+        rx: Rx,
+        party_time: Arc<AtomicU16>,
+    ) -> Result<Bot, irc::Error> {
         let channel = user_config.channels.iter().take(1).cloned().collect();
         let client = irc::Client::from_config(user_config).await?;
         client.identify()?;
@@ -96,6 +102,7 @@ impl Bot {
             client,
             commands: HashMap::new(),
             rx,
+            party_time,
         })
     }
 
@@ -130,6 +137,7 @@ impl Bot {
                                     writer: &sender,
                                     rx: &self.rx,
                                     state_tx: &tx,
+                                    party_time: self.party_time.load(Ordering::Relaxed),
                                 };
 
                                 command.handle(args).await;
@@ -224,7 +232,7 @@ impl Handler for Join {
             index: Some(index),
             user_nickname: args.msg.sender,
             group_size: 4,
-            wait_per_group: 5,
+            wait_per_group: args.party_time as usize,
         };
 
         args.writer
@@ -252,7 +260,7 @@ impl Handler for Place {
             index,
             user_nickname: args.msg.sender,
             group_size: 4,
-            wait_per_group: 5,
+            wait_per_group: args.party_time as usize,
         };
         args.writer
             .send_privmsg(args.msg.target, &format!("{}", queue_pos))

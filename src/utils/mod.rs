@@ -6,7 +6,7 @@ use irc::client::prelude::*;
 use serde::{Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 
-use std::collections::{HashMap, VecDeque};
+use std::{collections::{HashMap, VecDeque}, sync::{Arc, atomic::AtomicU16}};
 use tokio::sync::oneshot;
 
 pub type StateTx = tokio::sync::mpsc::Sender<StateCommand>;
@@ -37,6 +37,7 @@ pub enum StateCommand {
         tx: oneshot::Sender<Option<()>>,
     },
     ToggleQueue(oneshot::Sender<bool>),
+    PartyTime(u16),
 }
 
 fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::Error>
@@ -59,6 +60,7 @@ pub struct UserEntry {
 pub struct Queue {
     pub queue: VecDeque<UserEntry>,
     pub is_open: bool,
+    pub party_time: Arc<AtomicU16>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
