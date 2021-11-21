@@ -6,6 +6,7 @@ services:
       dockerfile: .devcontainer/Dockerfile
     volumes:
       - ..:/workspace:cached
+      - brittlq-extension-cache:/home/vscode/.vscode-server/extensions
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -29,3 +30,4 @@ services:
 
 volumes:
   db_data:
+  brittlq-extension-cache:
