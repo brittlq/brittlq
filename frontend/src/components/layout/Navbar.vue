@@ -48,7 +48,7 @@
           z-50
         "
       >
-        <MenuItem v-slot="{ active }">
+        <MenuItem v-slot="{ active }" v-if="token === null">
           <a
             :href="twitchOauthUri"
             :class="[
@@ -64,8 +64,8 @@
             <fa-icon :icon="['fab', 'twitch']" />
           </a>
         </MenuItem>
-        <MenuItem v-slot="{ active }">
-          <a
+        <MenuItem v-slot="{ active }" v-else-if="token !== null">
+          <button
             :class="[
               'py-2',
               'px-4',
@@ -74,9 +74,11 @@
               'min-w-max',
               { 'bg-gray-300': active },
             ]"
+            @click="clearToken"
           >
-            Some Link
-          </a>
+            Disconnect from Twitch
+            <fa-icon :icon="['far', 'times-circle']" />
+          </button>
         </MenuItem>
       </MenuItems>
     </Menu>
@@ -99,7 +101,7 @@
 <script>
 import { mapGetters, mapMutations, mapState } from 'vuex';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
-import { TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
+import { CLEAR_TOKEN, TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
 export default {
   components: {
     Menu,
@@ -114,11 +116,13 @@ export default {
     ...mapGetters(['twitchOauthUri']),
     ...mapState({
       chatOpen: 'chatSidebarOpen',
+      token: 'token',
     }),
   },
   methods: {
     ...mapMutations({
       toggleChat: TOGGLE_CHAT_SIDEBAR,
+      clearToken: CLEAR_TOKEN,
     }),
   },
 };
