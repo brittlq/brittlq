@@ -1,5 +1,14 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.191.0/containers/rust/.devcontainer/base.Dockerfile
 FROM mcr.microsoft.com/vscode/devcontainers/rust:0-1
+
+ARG USERNAME=vscode
+
+RUN mkdir -p /home/$USERNAME/.vscode-server/extensions \
+        /home/$USERNAME/.vscode-server-insiders/extensions \
+    && chown -R $USERNAME \
+        /home/$USERNAME/.vscode-server \
+        /home/$USERNAME/.vscode-server-insiders
+
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get update && apt-get install -y nodejs
 # add the vue cli service global binary
 RUN npm install -g @vue/cli @vue/cli-service-global
