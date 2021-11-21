@@ -24,6 +24,10 @@ export default createStore({
         responseType: 'token',
       },
     },
+    obs: {
+      address: 'ws://localhost:4444',
+      password: '',
+    },
   },
   getters: {
     twitchOauthUri: (state) => {
