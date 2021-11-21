@@ -7,12 +7,14 @@ import {
   faAngleDoubleLeft,
   faAngleDoubleRight,
 } from '@fortawesome/free-solid-svg-icons';
+import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import App from './App.vue';
 import './assets/tailwind.css';
 import store, { axios } from './store';
 import router from './router';
+import { SET_TOKEN } from './store/mutations';
 
 library.add(
   faMinusCircle,
@@ -20,15 +22,17 @@ library.add(
   faChevronDown,
   faChevronUp,
   faAngleDoubleRight,
-  faAngleDoubleLeft
+  faAngleDoubleLeft,
+  faTimesCircle
 );
 
 createApp(App)
   .use(router)
   .use(store)
-  // .component('font-awesome-icon', FontAwesomeIcon)
   .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
     app.config.globalProperties.$axios = axios;
   })
   .mount('#app');
+
+store.dispatch(SET_TOKEN);
