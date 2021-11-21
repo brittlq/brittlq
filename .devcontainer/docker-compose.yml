@@ -7,6 +7,7 @@ services:
     volumes:
       - ..:/workspace:cached
       - brittlq-extension-cache:/home/vscode/.vscode-server/extensions
+      - brittlq-globalStorage-cache:/home/vscode/.vscode-server/data/User/globalStorage
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -31,3 +32,4 @@ services:
 volumes:
   db_data:
   brittlq-extension-cache:
+  brittlq-globalStorage-cache:
