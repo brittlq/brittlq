@@ -1,16 +1,16 @@
-import Axios from 'axios';
 import { createStore } from 'vuex';
-import { TOGGLE_CHAT_SIDEBAR } from './mutations';
-import token from './get-token';
+import VuexPersist from 'vuex-persist';
+import { TOGGLE_CHAT_SIDEBAR, SET_TOKEN } from './mutations';
+import axios from './axios';
 
-const axios = Axios.create({
-  baseURL: process.env.VUE_APP_API_BASE,
+const vuexLocal = new VuexPersist({
+  storage: localStorage,
 });
 
 export { axios };
 export default createStore({
   state: {
-    token: token,
+    token: null,
     botName: process.env.VUE_APP_BOT_NAME,
     channel: process.env.VUE_APP_TWITCH_CHANNEL,
     chatSidebarOpen: true, //TODO: this should come from application state, either stored in the backend or on the client
@@ -48,7 +48,37 @@ export default createStore({
     [TOGGLE_CHAT_SIDEBAR](state) {
       state.chatSidebarOpen = !state.chatSidebarOpen;
     },
+    [SET_TOKEN](state, token) {
+      state.token = token;
+    },
   },
-  actions: {},
+  actions: {
+    [SET_TOKEN]({ commit }) {
+      // first set the token on state
+      const hash_parameters = location.hash.substr(1);
+      if (hash_parameters.length > 0) {
+        const params = hash_parameters.split('&').reduce((res, item) => {
+          var parts = item.split('=');
+          res[parts[0]] = parts[1];
+          return res;
+        }, {});
+        const token = params['access_token'];
+        // optimistically set the token on the state before sending to the backend
+        commit(SET_TOKEN, token);
+        //Since top level await is still experimental use the older IIFE technique to get async
+        (async () => {
+          try {
+            const response = await axios.post('/queue/token', params, {
+              headers: { 'content-type': 'application/json' },
+            });
+            console.log(response);
+          } catch (exc) {
+            console.error(exc);
+          }
+        })();
+      }
+    },
+  },
   modules: {},
+  plugins: [vuexLocal.plugin],
 });
