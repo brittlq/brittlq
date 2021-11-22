@@ -23,6 +23,12 @@
     >
       Commands
     </router-link>
+    <router-link
+      class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
+      to="/obs"
+    >
+      OBS Controls
+    </router-link>
     <Menu as="div" class="relative ml-auto" v-slot="{ open }">
       <MenuButton
         :class="[
