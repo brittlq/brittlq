@@ -2,32 +2,35 @@ import { createStore } from 'vuex';
 import VuexPersist from 'vuex-persist';
 import { TOGGLE_CHAT_SIDEBAR, SET_TOKEN } from './mutations';
 import axios from './axios';
+import obs from './obs';
 
 const vuexLocal = new VuexPersist({
   storage: localStorage,
+  reducer(state) {
+    const obs = Object.assign({}, state.obs, { connection: null });
+    return Object.assign({}, state, obs);
+  },
 });
 
 export { axios };
 export default createStore({
-  state: {
-    token: null,
-    botName: process.env.VUE_APP_BOT_NAME,
-    channel: process.env.VUE_APP_TWITCH_CHANNEL,
-    chatSidebarOpen: true, //TODO: this should come from application state, either stored in the backend or on the client
-    oauth: {
-      twitch: {
-        clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,
-        redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI,
-        claims: '{"id_token":{"email":null,"email_verified":null }}',
-        forceVerify: 'true',
-        scope: 'chat:read chat:edit',
-        responseType: 'token',
+  state() {
+    return {
+      token: null,
+      botName: process.env.VUE_APP_BOT_NAME,
+      channel: process.env.VUE_APP_TWITCH_CHANNEL,
+      chatSidebarOpen: true, //TODO: this should come from application state, either stored in the backend or on the client
+      oauth: {
+        twitch: {
+          clientId: process.env.VUE_APP_TWITCH_CLIENT_ID,
+          redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI,
+          claims: '{"id_token":{"email":null,"email_verified":null }}',
+          forceVerify: 'true',
+          scope: 'chat:read chat:edit',
+          responseType: 'token',
+        },
       },
-    },
-    obs: {
-      address: 'ws://localhost:4444',
-      password: '',
-    },
+    };
   },
   getters: {
     twitchOauthUri: (state) => {
@@ -79,6 +82,6 @@ export default createStore({
       }
     },
   },
-  modules: {},
+  modules: { obs },
   plugins: [vuexLocal.plugin],
 });
