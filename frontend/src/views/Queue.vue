@@ -44,7 +44,13 @@ export default {
   name: 'Queue',
   components: { QueueControls, QueueEntry },
   data() {
-    return { isOpen: false, queue: [], isConnected: false, intervalId: null };
+    return {
+      isOpen: false,
+      queue: [],
+      isConnected: false,
+      intervalId: null,
+      partyTime: 5,
+    };
   },
   created() {},
   mounted() {
