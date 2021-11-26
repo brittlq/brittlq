@@ -71,7 +71,7 @@ export default {
         if (index >= 0) {
           this.queue.splice(index, 1);
         }
-        axios.delete('/queue/' + user.nickname).then((response) => {
+        this.$axios.delete('/queue/' + user.nickname).then((response) => {
           console.log('Confirmed removal of ', response);
         });
       }
