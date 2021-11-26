@@ -6,7 +6,7 @@
       'flex-col overflow-y-scroll',
       'relative',
       'duration-300',
-      { closed: !chatOpen },
+      { closed: !isChatOpen },
     ]"
   >
     <Message
@@ -19,21 +19,22 @@
 
 <script lang="ts">
 import Message from './Message.vue';
-import { CONNECT_TO_CHAT } from '@/store/twitch/chat/operations';
-import { Message as ChatMessage } from '@/store/twitch/chat';
-import { defineComponent } from '@vue/runtime-core';
+import {
+  Message as ChatMessage,
+  useTwitchChatStore,
+} from '@/store/twitch-chat';
+import { computed, defineComponent } from 'vue';
 export default defineComponent({
   components: { Message },
-  mounted() {
-    this.$store.dispatch(CONNECT_TO_CHAT);
-  },
-  computed: {
-    messages(): ChatMessage[] {
-      return this.$store.state.twitch.chat?.messages ?? [];
-    },
-    chatOpen(): boolean {
-      return this.$store.state.common.chatSidebarOpen;
-    },
+  setup() {
+    const twitchChatStore = useTwitchChatStore();
+    twitchChatStore.connectToChat();
+    const messages = computed(() => twitchChatStore.messages);
+    const isChatOpen = computed(() => twitchChatStore.isChatExpanded);
+    return {
+      messages,
+      isChatOpen,
+    };
   },
 });
 </script>
