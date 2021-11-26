@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { axios } from '.';
+import axios from './axios';
 
 export type User = {
   id: string;
