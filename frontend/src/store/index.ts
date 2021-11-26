@@ -2,7 +2,6 @@ import { createStore } from 'vuex';
 import VuexPersist from 'vuex-persist';
 import { TOGGLE_CHAT_SIDEBAR } from './mutations';
 import axios from './axios';
-import obs, { State as OBSState } from './obs';
 import queue, { State as QueueState } from './queue';
 import twitch, { State as TwitchState } from './twitch';
 
@@ -13,7 +12,6 @@ export interface CommonState {
 }
 
 export interface State {
-  obs: OBSState;
   queue: QueueState;
   twitch: TwitchState;
   common: CommonState;
@@ -21,10 +19,6 @@ export interface State {
 
 const vuexLocal = new VuexPersist<State>({
   storage: localStorage,
-  reducer(state: State) {
-    const obs = Object.assign({}, state.obs, { connection: null });
-    return Object.assign({}, state, obs);
-  },
 });
 
 const common = {
@@ -45,6 +39,6 @@ const common = {
 
 export { axios };
 export default createStore<State>({
-  modules: { common, obs, queue, twitch },
+  modules: { common, queue, twitch },
   plugins: [vuexLocal.plugin],
 });
