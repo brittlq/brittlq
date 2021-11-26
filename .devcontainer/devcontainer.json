@@ -24,13 +24,13 @@
     "matklad.rust-analyzer",
     "dbaeumer.vscode-eslint",
     "vadimcn.vscode-lldb",
-    "octref.vetur",
     "editorconfig.editorconfig",
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
     "eamodio.gitlens",
     "mtxr.sqltools",
-    "mtxr.sqltools-driver-pg"
+    "mtxr.sqltools-driver-pg",
+    "johnsoncodehk.volar"
   ],
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
