@@ -38,10 +38,8 @@
 import QueueEntry from '@/components/queue/QueueEntry.vue';
 import QueueControls from '@/components/queue/QueueControls.vue';
 import { computed, defineComponent, onUnmounted } from '@vue/runtime-core';
-import { mapState, useStore } from 'vuex';
-import { UPDATE } from '@/store/queue/operations';
-import { State } from '@/store';
 import logging from '@/utils/logging';
+import { useQueueStore } from '@/store/queue';
 
 interface Data {
   intervalId: number;
@@ -57,11 +55,11 @@ export default defineComponent({
     onUnmounted(() => {
       window.clearInterval(intervalId);
     });
-    const store = useStore<State>();
-    const queue = computed(() => store.state.queue.queue);
+    const queueStore = useQueueStore();
+    const queue = computed(() => queueStore.queue);
 
     const queuePop = () => {
-      store.dispatch('popQueue'); // TODO: this isn't correct, update during pinia conversion
+      queueStore.popQueue();
     };
     return {
       queue,
