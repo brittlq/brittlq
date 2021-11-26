@@ -1,20 +1,29 @@
-import { createApp } from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
+import { faTwitch } from '@fortawesome/free-brands-svg-icons';
+import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 import {
-  faMinusCircle,
-  faChevronDown,
-  faChevronUp,
   faAngleDoubleLeft,
   faAngleDoubleRight,
+  faChevronDown,
+  faChevronUp,
+  faMinusCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
-import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { AxiosStatic } from 'axios';
+import { createApp } from 'vue';
+import { Store } from 'vuex';
 import App from './App.vue';
 import './assets/tailwind.css';
-import store, { axios } from './store';
 import router from './router';
-import { SET_TOKEN } from './store/mutations';
+import store, { axios, State } from './store';
+import { SET_TOKEN } from './store/twitch/operations';
+
+declare module '@vue/runtime-core' {
+  export interface ComponentCustomProperties {
+    $axios: AxiosStatic;
+    $store: Store<State>;
+  }
+}
 
 library.add(
   faMinusCircle,
@@ -35,4 +44,5 @@ createApp(App)
   })
   .mount('#app');
 
+// Dispatches an action in the store that checks for the hash fragment and sets the token if it exists
 store.dispatch(SET_TOKEN);
