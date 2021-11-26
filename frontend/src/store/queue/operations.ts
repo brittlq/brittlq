@@ -1,0 +1,9 @@
+export const SET_TIME = 'queue/SET_TIME';
+export const SET_PARTY_SIZE = 'queue/SET_PARTY_SIZE';
+export const SET_OPEN = 'queue/SET_OPEN';
+export const TOGGLE_OPEN = 'queue/TOGGLE_OPEN';
+export const SET_DISABLED = 'queue/SET_DISABLED';
+export const UPDATE = 'queue/UPDATE';
+export const REMOVE_USER = 'queue/REMOVE_USER';
+export const SET_QUEUE = 'queue/SET_QUEUE';
+export const POP_QUEUE = 'queue/POP_QUEUE';

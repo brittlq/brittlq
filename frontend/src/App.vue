@@ -21,14 +21,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Navbar from './components/layout/Navbar.vue';
 import Chat from './components/chat/Messages.vue';
+import { defineComponent } from '@vue/runtime-core';
 
-export default {
+export default defineComponent({
   name: 'App',
   components: { Navbar, Chat },
-};
+});
 </script>
 
 <style></style>
