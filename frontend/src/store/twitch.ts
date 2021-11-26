@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { axios } from '.';
+import axios from './axios';
 import logging from '../utils/logging';
 
 export interface State {
