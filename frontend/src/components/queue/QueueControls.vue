@@ -5,7 +5,7 @@
     </button>
     <button
       class="button-dark w-1/6"
-      @click="$emit('toggleOpen', $event)"
+      @click="toggleOpen"
       v-text="isOpen ? 'Close' : 'Open'"
     ></button>
     <div class="flex flex-col w-1/6">
@@ -23,59 +23,50 @@
   </nav>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { State } from '@/store';
+import {
+  POP_QUEUE,
+  SET_PARTY_SIZE,
+  TOGGLE_OPEN,
+} from '@/store/queue/operations';
+import { defineComponent } from '@vue/runtime-core';
+import { mapState } from 'vuex';
+
+export default defineComponent({
   name: 'QueueControls',
-  emits: ['toggleOpen', 'queuePop'],
-  props: {
-    queueLength: {
-      required: true,
-      type: Number,
-    },
-    startOpen: {
-      required: true,
-      type: Boolean,
-    },
-  },
-  data() {
-    return {
-      isDisabled: false,
-      isOpen: this.startOpen,
-      popSize: 4,
-    };
-  },
   computed: {
-    timeLeftInQueue() {
+    ...mapState<State>('queue', ['isOpen', 'isDisabled']),
+    timeLeftInQueue(): number {
       return Math.floor(this.queueLength / this.popSize) * 5;
+    },
+    popSize: {
+      get(): number {
+        return this.$store.state.queue.partySize;
+      },
+      set(value: number) {
+        this.$store.commit(SET_PARTY_SIZE, value);
+      },
+    },
+    queueLength(): number {
+      return this.$store.getters['queue/queueLength'];
     },
   },
   methods: {
-    async next(event) {
+    async next() {
       try {
-        if (event) {
-          this.isDisabled = true;
-          const url = `/api/queue/pop?count=${this.popSize}`;
-          const { data } = await this.$axios.get(url);
-          this.$emit('queuePop', data);
-        }
+        await this.$store.dispatch(`queue/${POP_QUEUE}`);
       } catch (exc) {
         console.error(exc);
-      } finally {
-        this.isDisabled = false;
       }
     },
-    async toggleOpen(event) {
-      if (event) {
-        try {
-          const { data } = await this.$axios.get('/api/queue/toggle');
-          console.log(data);
-          this.isOpen = data.isOpen;
-          this.$emit('toggleOpen', data);
-        } catch (exc) {
-          console.error(exc);
-        }
+    async toggleOpen() {
+      try {
+        await this.$store.dispatch(`queue/${TOGGLE_OPEN}`);
+      } catch (exc) {
+        console.error(exc);
       }
     },
   },
-};
+});
 </script>

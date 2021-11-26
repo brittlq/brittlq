@@ -1,3 +1,0 @@
-export const TOGGLE_CHAT_SIDEBAR = 'TOGGLE_CHAT_SIDEBAR';
-export const SET_TOKEN = 'SET_TOKEN';
-export const CLEAR_TOKEN = 'CLEAR_TOKEN';

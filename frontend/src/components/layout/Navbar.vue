@@ -14,21 +14,18 @@
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/party-queue"
+      >Queue</router-link
     >
-      Queue
-    </router-link>
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/commands"
+      >Commands</router-link
     >
-      Commands
-    </router-link>
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/obs"
+      >OBS Controls</router-link
     >
-      OBS Controls
-    </router-link>
     <Menu as="div" class="relative ml-auto" v-slot="{ open }">
       <MenuButton
         :class="[
@@ -54,7 +51,7 @@
           z-50
         "
       >
-        <MenuItem v-slot="{ active }" v-if="token === null">
+        <MenuItem v-slot="{ active }" v-if="!hasToken">
           <a
             :href="twitchOauthUri"
             :class="[
@@ -70,7 +67,7 @@
             <fa-icon :icon="['fab', 'twitch']" />
           </a>
         </MenuItem>
-        <MenuItem v-slot="{ active }" v-else-if="token !== null">
+        <MenuItem v-slot="{ active }" v-else-if="hasToken">
           <button
             :class="[
               'py-2',
@@ -104,11 +101,13 @@
   </nav>
 </template>
 
-<script>
-import { mapGetters, mapMutations, mapState } from 'vuex';
+<script lang="ts">
+import { mapGetters, mapMutations } from 'vuex';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
-import { CLEAR_TOKEN, TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
-export default {
+import { TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
+import { CLEAR_TOKEN } from '@/store/twitch/operations';
+import { defineComponent } from '@vue/runtime-core';
+export default defineComponent({
   components: {
     Menu,
     MenuButton,
@@ -116,14 +115,13 @@ export default {
     MenuItem,
   },
   computed: {
-    toggleChatLabel() {
+    toggleChatLabel(): string {
       return this.chatOpen ? 'Hide Chat' : 'Show Chat';
     },
-    ...mapGetters(['twitchOauthUri']),
-    ...mapState({
-      chatOpen: 'chatSidebarOpen',
-      token: 'token',
-    }),
+    chatOpen(): boolean {
+      return this.$store.state.common.chatSidebarOpen;
+    },
+    ...mapGetters('twitch', ['twitchOauthUri', 'hasToken']),
   },
   methods: {
     ...mapMutations({
@@ -131,7 +129,7 @@ export default {
       clearToken: CLEAR_TOKEN,
     }),
   },
-};
+});
 </script>
 
 <style></style>

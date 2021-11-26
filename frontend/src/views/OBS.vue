@@ -16,32 +16,33 @@
       <button type="button" class="button-dark" @click="connect">
         Connect
       </button>
-      <button type="button" class="button-dark" @click="getSources">
+      <button type="button" class="button-dark" @click="updateSources">
         Get Sources
       </button>
     </div>
-    <ul>
-      <li v-for="source in sources" :key="`obs-source-${source}`">
-        {{ source }}
-      </li>
-    </ul>
+    <div class="flex flex-col">
+      <template v-for="(source, index) in sources" :key="`obs_source_${index}`">
+        <Source class="flex flex-row" v-bind="source" />
+      </template>
+    </div>
   </section>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script lang="ts">
+import { defineComponent } from '@vue/runtime-core';
 import {
   OBS_CONNECT,
   OBS_SET_PASSWORD,
   OBS_SET_ADDRESS,
   OBS_UPDATE_SOURCES,
-} from '../store/obs/mutations';
-export default {
+} from '../store/obs/operations';
+import Source from '@/components/obs/Source.vue';
+export default defineComponent({
   methods: {
     connect() {
       this.$store.dispatch(OBS_CONNECT);
     },
-    getSources() {
+    updateSources() {
       this.$store.dispatch(OBS_UPDATE_SOURCES);
     },
   },
@@ -62,11 +63,12 @@ export default {
         this.$store.commit(OBS_SET_ADDRESS, { address: value });
       },
     },
-    ...mapState({
-      sources: (state) => state.obs.sources,
-    }),
+    sources() {
+      return this.$store.state.obs.sources;
+    },
   },
-};
+  components: { Source },
+});
 </script>
 
 <style></style>
