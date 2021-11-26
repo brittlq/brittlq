@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { AxiosStatic } from 'axios';
 import { createApp } from 'vue';
 import { Store } from 'vuex';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import './assets/tailwind.css';
 import router from './router';
@@ -38,6 +39,7 @@ library.add(
 createApp(App)
   .use(router)
   .use(store)
+  .use(createPinia())
   .component('fa-icon', FontAwesomeIcon)
   .use((app) => {
     app.config.globalProperties.$axios = axios;
