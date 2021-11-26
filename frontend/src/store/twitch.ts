@@ -1,7 +1,6 @@
-import { ActionContext } from 'vuex';
-import { axios, State as RootState } from '..';
-import { SET_TOKEN } from './operations';
-import chat, { State as ChatState } from './chat';
+import { defineStore } from 'pinia';
+import { axios } from '.';
+import logging from '../utils/logging';
 
 export interface State {
   clientId: string;
@@ -11,11 +10,9 @@ export interface State {
   scope: string;
   responseType: string;
   token: string | undefined;
-  chat?: ChatState;
 }
 
-export default {
-  modules: { chat },
+export const useTwitchStore = defineStore('twitch', {
   state: (): State => ({
     clientId: process.env.VUE_APP_TWITCH_CLIENT_ID ?? '',
     redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI ?? '',
@@ -25,13 +22,8 @@ export default {
     responseType: 'token',
     token: undefined,
   }),
-  mutations: {
-    [SET_TOKEN](state: State, { token }: { token: string }) {
-      state.token = token;
-    },
-  },
   getters: {
-    twitchOauthUri(state: State): string {
+    twitchOauthUri(state): string {
       const url = new URL('/oauth2/authorize', 'https://id.twitch.tv');
       url.searchParams.set('client_id', state.clientId);
       url.searchParams.set('redirect_uri', state.redirectUri);
@@ -41,12 +33,12 @@ export default {
       url.searchParams.set('claims', encodeURIComponent(state.claims));
       return url.toString();
     },
-    hasToken(state: State): boolean {
+    hasToken(state): boolean {
       return !!state.token;
     },
   },
   actions: {
-    [SET_TOKEN]({ commit }: ActionContext<State, RootState>) {
+    async setToken() {
       // first set the token on state
       const hash_parameters = location.hash.substr(1);
       if (hash_parameters.length > 0) {
@@ -59,19 +51,17 @@ export default {
           }, {});
         const token: string = params['access_token'];
         // optimistically set the token on the state before sending to the backend
-        commit(SET_TOKEN, { token });
+        this.token = token;
         //Since top level await is still experimental use the older IIFE technique to get async
-        (async () => {
-          try {
-            const response = await axios.post('/queue/token', params, {
-              headers: { 'content-type': 'application/json' },
-            });
-            console.log(response);
-          } catch (exc) {
-            console.error(exc);
-          }
-        })();
+        try {
+          const response = await axios.post('/queue/token', params, {
+            headers: { 'content-type': 'application/json' },
+          });
+          logging.log(response);
+        } catch (exc) {
+          logging.error(exc);
+        }
       }
     },
   },
-};
+});
