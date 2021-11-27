@@ -1,11 +1,11 @@
 <template>
   <nav>
     <div class="w-1/6 flex flex-col">
-      <button class="button-dark w-1/6" @click="next" :disabled="isDisabled">
+      <button class="button-dark" @click="next" :disabled="isDisabled">
         Next
       </button>
       <button
-        class="button-dark w-1/6"
+        class="button-dark"
         @click="toggleOpen"
         v-text="openQueueLabel"
       ></button>

@@ -1,16 +1,9 @@
 <template>
   <div class="flex flex-col gap-2">
-    <QueueControls
+    <queue-controls
       :queue-length="queue.length"
       @queuePop="queuePop"
-      class="
-        flex flex-row
-        justify-around
-        w-full
-        p-2
-        border-b border-gray-900
-        bg-gray-200
-      "
+      class="flex flex-row justify-around w-full p-2 border-b border-gray-900 bg-gray-200"
     />
     <table class="queue table-auto flex-1">
       <thead>
@@ -22,13 +15,13 @@
         </tr>
       </thead>
       <tbody>
-        <QueueEntry
+        <queue-entry
           v-for="(user, index) in queue"
           :key="user.id"
           :entry="user"
           :index="index + 1"
           class="queue-item"
-        ></QueueEntry>
+        />
       </tbody>
     </table>
   </div>
@@ -41,11 +34,8 @@ import { computed, defineComponent, onUnmounted } from '@vue/runtime-core';
 import logging from '@/utils/logging';
 import { useQueueStore } from '@/store/queue';
 
-interface Data {
-  intervalId: number;
-}
-
 export default defineComponent({
+  name: 'PartyQueue',
   components: { QueueControls, QueueEntry },
   setup() {
     const intervalId = window.setInterval(() => {
