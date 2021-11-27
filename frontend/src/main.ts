@@ -11,13 +11,13 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { AxiosStatic } from 'axios';
 import { createApp } from 'vue';
-import { Store } from 'vuex';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import './assets/tailwind.css';
 import router from './router';
 import axios from './store/axios';
 import { useTwitchStore } from './store/twitch';
+import { piniaPersistPlugin } from './store/persist';
 
 declare module '@vue/runtime-core' {
   export interface ComponentCustomProperties {
@@ -36,6 +36,7 @@ library.add(
 );
 
 const pinia = createPinia();
+pinia.use(piniaPersistPlugin);
 
 createApp(App)
   .use(router)
