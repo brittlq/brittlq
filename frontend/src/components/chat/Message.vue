@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from '@vue/runtime-core';
+import { computed, defineComponent, PropType } from 'vue';
 import { ChatUserstate } from 'tmi.js';
 
 export default defineComponent({
@@ -28,10 +28,11 @@ export default defineComponent({
       required: true,
     },
   },
-  computed: {
-    username(): string {
-      return this.userstate.username ?? '';
-    },
+  setup(props) {
+    const username = computed(() => props.userstate.username);
+    return {
+      username,
+    };
   },
 });
 </script>

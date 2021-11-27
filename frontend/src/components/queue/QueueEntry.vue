@@ -13,8 +13,7 @@
 </template>
 
 <script lang="ts">
-import { User } from '@/store/queue';
-import { REMOVE_USER } from '@/store/queue/operations';
+import { useQueueStore, User } from '@/store/queue';
 import { defineComponent, PropType } from '@vue/runtime-core';
 
 export default defineComponent({
@@ -28,11 +27,11 @@ export default defineComponent({
       type: Number,
     },
   },
-  emits: ['remove-user'],
-  methods: {
-    removeUser(user: User) {
-      this.$store.commit(`obs/${REMOVE_USER}`, { user });
-    },
+  setup() {
+    const queueStore = useQueueStore();
+    return {
+      removeUser: queueStore.removeUserFromQueue,
+    };
   },
 });
 </script>
