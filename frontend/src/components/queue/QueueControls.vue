@@ -1,72 +1,64 @@
 <template>
   <nav>
-    <button class="button-dark w-1/6" @click="next" :disabled="isDisabled">
-      Next
-    </button>
-    <button
-      class="button-dark w-1/6"
-      @click="toggleOpen"
-      v-text="isOpen ? 'Close' : 'Open'"
-    ></button>
+    <div class="w-1/6 flex flex-col">
+      <button class="button-dark w-1/6" @click="next" :disabled="isDisabled">
+        Next
+      </button>
+      <button
+        class="button-dark w-1/6"
+        @click="toggleOpen"
+        v-text="openQueueLabel"
+      ></button>
+    </div>
     <div class="flex flex-col w-1/6">
       <span class="font-bold">Queue size</span>
       <div>{{ queueLength }}</div>
     </div>
     <div class="flex flex-col w-1/6">
       <span class="font-bold">Time remaining</span>
-      <div>{{ timeLeftInQueue }} minutes</div>
+      <div>{{ queueDuration }} minutes</div>
     </div>
     <div class="flex flex-col w-1/6">
       <label class="font-bold">Group Size</label>
-      <input type="text" class="rounded" v-model="popSize" placeholder="4" />
+      <input type="text" class="rounded" v-model="partySize" placeholder="4" />
+    </div>
+    <div class="w-1/6">
+      {{ currentGroup.join(', ') }}
     </div>
   </nav>
 </template>
 
 <script lang="ts">
-import { State } from '@/store';
-import {
-  POP_QUEUE,
-  SET_PARTY_SIZE,
-  TOGGLE_OPEN,
-} from '@/store/queue/operations';
-import { defineComponent } from '@vue/runtime-core';
-import { mapState } from 'vuex';
+import { useQueueStore } from '@/store/queue';
+import { defineComponent, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 
 export default defineComponent({
   name: 'QueueControls',
-  computed: {
-    ...mapState<State>('queue', ['isOpen', 'isDisabled']),
-    timeLeftInQueue(): number {
-      return Math.floor(this.queueLength / this.popSize) * 5;
-    },
-    popSize: {
-      get(): number {
-        return this.$store.state.queue.partySize;
-      },
-      set(value: number) {
-        this.$store.commit(SET_PARTY_SIZE, value);
-      },
-    },
-    queueLength(): number {
-      return this.$store.getters['queue/queueLength'];
-    },
-  },
-  methods: {
-    async next() {
-      try {
-        await this.$store.dispatch(`queue/${POP_QUEUE}`);
-      } catch (exc) {
-        console.error(exc);
-      }
-    },
-    async toggleOpen() {
-      try {
-        await this.$store.dispatch(`queue/${TOGGLE_OPEN}`);
-      } catch (exc) {
-        console.error(exc);
-      }
-    },
+  setup() {
+    const queueStore = useQueueStore();
+    const {
+      isOpen,
+      isDisabled,
+      queueLength,
+      partySize,
+      currentGroup,
+      partyTime,
+    } = storeToRefs(queueStore);
+    const openQueueLabel = computed(() => (isOpen ? 'Close' : 'Open'));
+    const queueDuration = computed(
+      () => Math.floor(queueLength.value / partySize.value) * partyTime.value
+    );
+    return {
+      isDisabled,
+      partySize,
+      queueLength,
+      currentGroup,
+      openQueueLabel,
+      queueDuration,
+      next: queueStore.popQueue,
+      toggleOpen: queueStore.toggleQueueState,
+    };
   },
 });
 </script>
