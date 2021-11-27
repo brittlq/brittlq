@@ -14,7 +14,7 @@ export const useTwitchChatStore = defineStore('twitch/chat', {
   state: () => {
     return {
       messages: new Array<Message>(),
-      client: null,
+      client: null as Client | null,
       channels: new Array<string>(),
       isChatExpanded: true,
       botName: process.env.VUE_APP_BOT_NAME,

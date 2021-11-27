@@ -13,6 +13,7 @@
 import { defineComponent } from '@vue/runtime-core';
 
 export default defineComponent({
+  name: 'OBSSource',
   props: {
     name: {
       type: String,

@@ -32,6 +32,7 @@ import Source from '@/components/obs/Source.vue';
 import { useObsStore } from '@/store/obs';
 import logging from '@/utils/logging';
 export default defineComponent({
+  name: 'OBSControls',
   components: { Source },
   setup() {
     const obsStore = useObsStore();

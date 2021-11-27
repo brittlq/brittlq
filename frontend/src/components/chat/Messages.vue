@@ -9,23 +9,21 @@
       { closed: !isChatOpen },
     ]"
   >
-    <Message
+    <ChatMessage
       v-for="message in messages"
       :key="message.id"
       v-bind="message"
-    ></Message>
+    ></ChatMessage>
   </div>
 </template>
 
 <script lang="ts">
-import Message from './Message.vue';
-import {
-  Message as ChatMessage,
-  useTwitchChatStore,
-} from '@/store/twitch-chat';
+import ChatMessage from './Message.vue';
+import { useTwitchChatStore } from '@/store/twitch-chat';
 import { computed, defineComponent } from 'vue';
 export default defineComponent({
-  components: { Message },
+  name: 'ChatMessages',
+  components: { ChatMessage },
   setup() {
     const twitchChatStore = useTwitchChatStore();
     twitchChatStore.connectToChat();
