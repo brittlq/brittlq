@@ -21,9 +21,11 @@ export default defineComponent({
     },
     type: {
       type: String,
+      default: 'unknown',
     },
     typeId: {
       type: String,
+      default: 'unknown',
     },
   },
 });

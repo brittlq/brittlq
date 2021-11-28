@@ -1,32 +1,23 @@
 import { defineStore } from 'pinia';
 import axios from './axios';
 import logging from '../utils/logging';
-
-export interface State {
-  clientId: string;
-  redirectUri: string;
-  claims: string;
-  forceVerify: string;
-  scope: string;
-  responseType: string;
-  token: string | undefined;
-}
+import { UndefinedString } from '.';
 
 export const useTwitchStore = defineStore('twitch', {
-  state: (): State => ({
-    clientId: process.env.VUE_APP_TWITCH_CLIENT_ID ?? '',
-    redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI ?? '',
+  state: () => ({
+    clientId: process.env.VUE_APP_TWITCH_CLIENT_ID as UndefinedString,
+    redirectUri: process.env.VUE_APP_TWITCH_REDIRECT_URI as UndefinedString,
     claims: '{"id_token":{"email":null,"email_verified":null }}',
     forceVerify: 'true',
     scope: 'chat:read chat:edit',
     responseType: 'token',
-    token: undefined,
+    token: undefined as UndefinedString,
   }),
   getters: {
     twitchOauthUri(state): string {
       const url = new URL('/oauth2/authorize', 'https://id.twitch.tv');
-      url.searchParams.set('client_id', state.clientId);
-      url.searchParams.set('redirect_uri', state.redirectUri);
+      url.searchParams.set('client_id', state.clientId!);
+      url.searchParams.set('redirect_uri', state.redirectUri!);
       url.searchParams.set('response_type', state.responseType);
       url.searchParams.set('scope', state.scope);
       url.searchParams.set('force_verify', state.forceVerify);
@@ -62,6 +53,14 @@ export const useTwitchStore = defineStore('twitch', {
           logging.error(exc);
         }
       }
+    },
+  },
+  persist: {
+    enabled: true,
+    reducer(state) {
+      return {
+        token: state.token,
+      };
     },
   },
 });
