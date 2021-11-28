@@ -45,7 +45,7 @@ export default defineComponent({
       currentGroup,
       partyTime,
     } = storeToRefs(queueStore);
-    const openQueueLabel = computed(() => (isOpen ? 'Close' : 'Open'));
+    const openQueueLabel = computed(() => (isOpen.value ? 'Close' : 'Open'));
     const queueDuration = computed(
       () => Math.floor(queueLength.value / partySize.value) * partyTime.value
     );

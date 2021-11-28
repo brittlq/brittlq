@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-2">
     <queue-controls
       :queue-length="queue.length"
-      @queuePop="queuePop"
+      @queue-pop="queuePop"
       class="flex flex-row justify-around w-full p-2 border-b border-gray-900 bg-gray-200"
     />
     <table class="queue table-auto flex-1">
@@ -31,21 +31,17 @@
 import QueueEntry from '@/components/queue/QueueEntry.vue';
 import QueueControls from '@/components/queue/QueueControls.vue';
 import { computed, defineComponent, onUnmounted } from '@vue/runtime-core';
-import logging from '@/utils/logging';
 import { useQueueStore } from '@/store/queue';
 
 export default defineComponent({
   name: 'PartyQueue',
   components: { QueueControls, QueueEntry },
   setup() {
-    const intervalId = window.setInterval(() => {
-      // poll the queue endpoint for updates here
-      logging.log('Poll fired');
-    }, 500);
-    onUnmounted(() => {
-      window.clearInterval(intervalId);
-    });
     const queueStore = useQueueStore();
+    queueStore.startPollingQueue(10000);
+    onUnmounted(() => {
+      queueStore.stopPollingQueue();
+    });
     const queue = computed(() => queueStore.queue);
 
     const queuePop = () => {

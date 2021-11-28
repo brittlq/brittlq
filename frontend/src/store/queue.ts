@@ -1,3 +1,4 @@
+import logging from '@/utils/logging';
 import { defineStore } from 'pinia';
 import axios from './axios';
 
@@ -7,34 +8,41 @@ export type User = {
   time_joined: Date;
 };
 
-export type UserQueue = Array<User>;
-
-export type State = {
-  /** The list of users in the queue */
-  queue: UserQueue;
-  /** How many users to pop when popping the queue */
-  partySize: number;
-  /** The estimated length betwen groups, in seconds */
-  partyTime: number;
-  /** Are interactions disabled on the queue components? */
-  isDisabled: boolean;
-  /** Is the queue accepting new users */
-  isOpen: boolean;
-  /** The group of users most recently popped from the queue */
-  currentGroup: Array<User>;
+type QueueResponse = {
+  queue: Array<User>;
+  is_open: boolean;
 };
 
 export const useQueueStore = defineStore('queue', {
-  state: (): State => ({
-    queue: [],
+  state: () => ({
+    queue: new Array<User>(),
     partySize: 4,
     partyTime: 5 * 60, // seconds
     isDisabled: false,
     isOpen: false,
     currentGroup: new Array<User>(),
+    pollIntervalId: 0,
   }),
   actions: {
-    updateQueueFromBackend() {},
+    /**
+     * Start listening to the backend for updates to the queue
+     * TODO: websocket or some other messaging option?
+     */
+    startPollingQueue(interval: number = 1000) {
+      this.pollIntervalId = window.setInterval(async () => {
+        try {
+          const { data } = await axios.get<QueueResponse>('/queue');
+          this.queue = data.queue;
+          this.isOpen = data.is_open;
+        } catch (exc) {
+          logging.error(exc);
+        }
+      }, interval);
+    },
+    stopPollingQueue() {
+      window.clearInterval(this.pollIntervalId);
+      this.pollIntervalId = 0;
+    },
     async popQueue() {
       this.isDisabled = true;
       const { data } = await axios.get(this.popUrl);
@@ -43,7 +51,7 @@ export const useQueueStore = defineStore('queue', {
     },
     async toggleQueueState() {
       const { data } = await axios.get(this.toggleOpenUrl);
-      this.isOpen = data.is_open;
+      this.isOpen = data;
     },
     removeUserFromQueue(user: User) {
       this.queue = this.queue.filter((entry: User) => {
@@ -52,14 +60,23 @@ export const useQueueStore = defineStore('queue', {
     },
   },
   getters: {
-    queueLength(state: State): number {
+    queueLength(state): number {
       return state.queue.length;
     },
-    popUrl(state: State): string {
-      return `/api/queue/pop?count=${state.partySize}`;
+    popUrl(state): string {
+      return `/queue/pop?count=${state.partySize}`;
     },
     toggleOpenUrl(): string {
-      return '/api/queue/toggle';
+      return '/queue/toggle';
+    },
+  },
+  persist: {
+    enabled: true,
+    reducer(state) {
+      return {
+        partySize: state.partySize,
+        partyTime: state.partyTime,
+      };
     },
   },
 });
