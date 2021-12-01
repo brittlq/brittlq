@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ChatUserstate, Client } from 'tmi.js';
 import { v4 as uuid } from 'uuid';
+import { useCommandsStore } from './commands';
 import { useTwitchStore } from './twitch';
 
 export type Message = {
@@ -13,7 +14,7 @@ export type Message = {
 export const useTwitchChatStore = defineStore('twitch/chat', {
   state: () => {
     return {
-      messages: new Array<Message>(),
+      messages: [] as Message[],
       client: null as Client | null,
       channels: [process.env.VUE_APP_TWITCH_CHANNEL ?? 'brittleknee'],
       isChatExpanded: true,
@@ -38,12 +39,33 @@ export const useTwitchChatStore = defineStore('twitch/chat', {
       client.on('connected', (addr: string, port: number) => {
         console.log(`Made connection to twitch chat on ${addr}:${port}`);
       });
-      client.on('message', (channel, userstate, msg, self) => {
-        if (self) return;
-        this.messages.push({ channel, msg, userstate, id: uuid() });
-      });
+      client.on('message', this.handleMessage);
       client.connect();
       this.client = client;
+    },
+    handleMessage(
+      channel: string,
+      userstate: ChatUserstate,
+      msg: string,
+      self: boolean
+    ) {
+      if (self) return;
+      const messageData = { channel, msg, userstate, id: uuid() };
+      this.messages.push(messageData);
+
+      const commandsStore = useCommandsStore();
+      if (msg.startsWith(commandsStore.prefix)) {
+        const cmdName = msg.split(' ')[0].replace(commandsStore.prefix, ''); // get the first group of characters by whitespace, remove the prefix character
+        const cmd = commandsStore.commands.find((command) =>
+          command.name.includes(cmdName)
+        );
+        if (cmd) {
+          commandsStore.execute(cmd, messageData);
+        }
+      }
+    },
+    sendMessage(channel: string, message: string) {
+      this.client?.say(channel, message);
     },
   },
 });

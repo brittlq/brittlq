@@ -1,3 +1,4 @@
+import logging from '@/utils/logging';
 import { PiniaPluginContext } from 'pinia';
 
 type StorageName = 'localStorage' | 'sessionStorage' | 'custom';
@@ -10,6 +11,10 @@ declare module 'pinia' {
       key?: string;
       reducer?: (state: S) => Partial<S>;
       persister?: Persister;
+      hydrater?: (
+        storedState: string,
+        context: PiniaPluginContext<string, S>
+      ) => Partial<S>;
     };
   }
 }
@@ -34,19 +39,23 @@ function persistMethod(
   }
 }
 
-export function piniaPersistPlugin({ store, options }: PiniaPluginContext) {
+export function piniaPersistPlugin(context: PiniaPluginContext) {
+  const { options, store } = context;
   if (options.persist?.enabled) {
     const persister = persistMethod(
       options.persist.storage,
       options.persist.persister
     );
     const storageKey = options.persist?.key ?? store.$id;
+    // subscribe to state mutations to set the desired state into the given storage medium
     const storedState = persister.getItem(storageKey);
     if (storedState) {
-      // TODO: handle the case where the custom persister returns a hydrated object
-      store.$patch(JSON.parse(storedState));
+      if (options.persist?.hydrater) {
+        options.persist.hydrater(storedState, context);
+      } else {
+        store.$patch(JSON.parse(storedState));
+      }
     }
-    // subscribe to state mutations to set the desired state into the given storage medium
     store.$subscribe((mutation, state) => {
       const reduced = options.persist?.reducer
         ? options.persist.reducer(state)
