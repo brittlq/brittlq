@@ -8,18 +8,21 @@
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/party-queue"
-      >Queue</router-link
     >
+      Queue
+    </router-link>
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/commands"
-      >Commands</router-link
     >
+      Commands
+    </router-link>
     <router-link
       class="py-2 px-4 border-r border-gray-900 hover:bg-gray-300"
       to="/obs"
-      >OBS Controls</router-link
     >
+      OBS Controls
+    </router-link>
     <Menu as="div" class="relative ml-auto" v-slot="{ open }">
       <MenuButton
         :class="[
@@ -40,14 +43,7 @@
         <MenuItem v-slot="{ active }" v-if="!hasToken">
           <a
             :href="twitchOauthUri"
-            :class="[
-              'py-2',
-              'px-4',
-              'block',
-              'w-full',
-              'min-w-max',
-              { 'bg-gray-300': active },
-            ]"
+            :class="['profile-menu-item', { 'bg-gray-300': active }]"
           >
             Connect to Twitch
             <fa-icon :icon="['fab', 'twitch']" />
@@ -55,19 +51,38 @@
         </MenuItem>
         <MenuItem v-slot="{ active }" v-else-if="hasToken">
           <button
-            :class="[
-              'py-2',
-              'px-4',
-              'block',
-              'w-full',
-              'min-w-max',
-              { 'bg-gray-300': active },
-            ]"
+            :class="['profile-menu-item', { 'bg-gray-300': active }]"
             @click="logoutTwitch"
           >
             Disconnect from Twitch
             <fa-icon :icon="['far', 'times-circle']" />
           </button>
+        </MenuItem>
+        <MenuItem v-slot="{ active }" v-if="!obsConnected">
+          <button
+            :class="['profile-menu-item', { 'bg-gray-300': active }]"
+            @click="connectToObs"
+          >
+            Connect to OBS
+            <fa-icon :icon="['fas', 'broadcast-tower']" />
+          </button>
+        </MenuItem>
+        <MenuItem v-slot="{ active }" v-else-if="obsConnected">
+          <button
+            :class="['profile-menu-item', { 'bg-gray-300': active }]"
+            @click="disconnectFromObs"
+          >
+            Disconnect from OBS
+            <fa-icon :icon="['far', 'times-circle']" />
+          </button>
+        </MenuItem>
+        <MenuItem v-slot="{ active }">
+          <router-link
+            :class="['profile-menu-item', { 'bg-gray-300': active }]"
+            to="/settings"
+          >
+            Settings
+          </router-link>
         </MenuItem>
       </MenuItems>
     </Menu>
@@ -92,6 +107,7 @@
 </template>
 
 <script lang="ts">
+import { useObsStore } from '@/store/obs';
 import { useTwitchStore } from '@/store/twitch';
 import { useTwitchChatStore } from '@/store/twitch-chat';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
@@ -108,11 +124,13 @@ export default defineComponent({
   setup() {
     const twitchChatStore = useTwitchChatStore();
     const twitchStore = useTwitchStore();
+    const obsStore = useObsStore();
     const toggleChatLabel = computed(() =>
       twitchChatStore.isChatExpanded ? 'Hide Twitch Chat' : 'Show Twitch Chat'
     );
     const { isChatExpanded } = storeToRefs(twitchChatStore);
     const { hasToken, twitchOauthUri } = storeToRefs(twitchStore);
+    const { connected } = storeToRefs(obsStore);
     const logoutTwitch = () => {
       twitchStore.token = '';
     };
@@ -122,9 +140,16 @@ export default defineComponent({
       logoutTwitch,
       hasToken,
       twitchOauthUri,
+      obsConnected: connected,
+      connectToObs: obsStore.connect,
+      disconnectFromObs: obsStore.disconnect,
     };
   },
 });
 </script>
 
-<style></style>
+<style>
+.profile-menu-item {
+  @apply py-2 px-4 block w-full min-w-max text-left;
+}
+</style>
