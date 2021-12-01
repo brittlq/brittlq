@@ -30,6 +30,12 @@ const routes: RouteRecordRaw[] = [
     name: 'OBS Controls',
     component: () => import(/* webpackChunkName: "obs" */ '../views/OBS.vue'),
   },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () =>
+      import(/* webpackChunkName: "settings" */ '@/views/Settings.vue'),
+  },
 ];
 
 const router = createRouter({
