@@ -7,6 +7,7 @@ import {
   faChevronDown,
   faChevronUp,
   faMinusCircle,
+  faBroadcastTower,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { AxiosStatic } from 'axios';
@@ -32,7 +33,8 @@ library.add(
   faChevronUp,
   faAngleDoubleRight,
   faAngleDoubleLeft,
-  faTimesCircle
+  faTimesCircle,
+  faBroadcastTower
 );
 
 const pinia = createPinia();
