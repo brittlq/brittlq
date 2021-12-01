@@ -38,7 +38,7 @@ export default defineComponent({
   components: { QueueControls, QueueEntry },
   setup() {
     const queueStore = useQueueStore();
-    queueStore.startPollingQueue(10000);
+    // queueStore.startPollingQueue(10000);
     onUnmounted(() => {
       queueStore.stopPollingQueue();
     });
