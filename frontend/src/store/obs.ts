@@ -1,80 +1,51 @@
-import ObsWebSocket, { Scene } from 'obs-websocket-js';
-import { defineStore } from 'pinia';
+import ObsWebSocket, { Scene, SceneItem } from 'obs-websocket-js';
+import { defineStore, StoreActions } from 'pinia';
 import logging from '../utils/logging';
-
-export type State = {
-  address: string;
-  password: string;
-  connection: ObsWebSocket | null;
-  sources: Source[];
-  scenes: Scene[];
-  connected: boolean;
-};
-
-export type SourceSettings = {
-  [index: string]: string;
-};
-
-export type Source = {
-  name: string;
-  type: string;
-  typeId: string; //TODO: start identifying a list of possible typeIds, create enum or list/type
-  settings?: SourceSettings;
-};
+import { OBSCommand, OBSCommandActions } from './commands';
 
 export const useObsStore = defineStore('obs', {
-  state: (): State => ({
-    address: 'localhost:4444',
+  state: () => ({
+    address: 'localhost',
+    port: 4444,
     password: '',
-    connection: null,
-    sources: [],
-    scenes: [],
+    connection: null as ObsWebSocket | null,
+    scenes: [] as Scene[],
     connected: false,
   }),
   actions: {
     async connect(): Promise<ObsWebSocket> {
-      try {
-        const connection = new ObsWebSocket();
-        await connection.connect({
-          address: this.address,
-          password: this.password,
-        });
-        connection.on('ConnectionClosed', this.disconnect);
-        connection.on('Exiting', this.disconnect);
-        this.connection = connection;
-        this.connected = true;
-        return connection;
-      } catch (exc) {
-        logging.error(exc);
-        throw exc;
+      if (this.connected && this.connection) {
+        return this.connection;
+      } else {
+        try {
+          const connection = new ObsWebSocket();
+          await connection.connect({
+            address: `${this.address}:${this.port}`,
+            password: this.password,
+          });
+          connection.on('ConnectionClosed', this.disconnect);
+          connection.on('Exiting', this.disconnect);
+          connection.on('ConnectionOpened', (data) => {
+            logging.log(
+              `Connected to OBS websocket server on ${this.address}:${this.port}`
+            );
+          });
+          this.connection = connection;
+          this.connected = true;
+          return connection;
+        } catch (exc) {
+          logging.error(exc);
+          throw exc;
+        }
       }
     },
     disconnect() {
       this.connection = null;
       this.connected = false;
     },
-    async updateSources() {
-      try {
-        const response = await this.connection?.send('GetSourcesList');
-        const sources = response?.sources;
-        if (sources) {
-          // autoload source settings
-          const sourcesWithSettings = [];
-          for (const source of sources) {
-            const response = await this.connection?.send('GetSourceSettings', {
-              sourceName: source.name,
-              sourceType: source.type,
-            });
-            const settings = response?.sourceSettings;
-            this.sources.push({
-              ...source,
-              settings,
-            });
-          }
-        }
-      } catch (exc) {
-        logging.error(exc);
-      }
+    async reconnect() {
+      this.disconnect();
+      await this.connect();
     },
     async updateScenes() {
       try {
@@ -83,6 +54,51 @@ export const useObsStore = defineStore('obs', {
       } catch (exc) {
         logging.error(exc);
       }
+    },
+    async toggleSourceVisibility(sourceName: string, sourceId: number) {
+      try {
+        const sourceProps = await this.connection?.send(
+          'GetSceneItemProperties',
+          { item: { name: sourceName, id: sourceId } }
+        );
+        if (sourceProps) {
+          sourceProps.visible = !sourceProps.visible;
+          const resp = await this.connection?.send('SetSceneItemProperties', {
+            item: { name: sourceName, id: sourceId },
+            ...sourceProps,
+          });
+        }
+      } catch (exc) {
+        logging.error(exc);
+      }
+    },
+    executeCommand(command: OBSCommand) {
+      switch (command.action) {
+        case OBSCommandActions.ToggleSourceVisibility:
+          this.toggleSourceVisibility(command.args.name!, command.args.id!);
+          break;
+      }
+    },
+  },
+  persist: {
+    enabled: true,
+    reducer(state) {
+      return {
+        address: state.address,
+        port: state.port,
+        password: state.password,
+        connected: state.connected,
+      };
+    },
+    hydrater(storedState, context) {
+      const newState = JSON.parse(storedState);
+      const wasConnected = !!newState.connected;
+      delete newState.connected;
+      Object.assign(context.store.$state, newState);
+      if (wasConnected) {
+        context.store.connect();
+      }
+      return newState;
     },
   },
 });
