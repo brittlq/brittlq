@@ -33,8 +33,8 @@ export default defineComponent({
     const changed = (event: Event) => {
       emit(
         'update:message',
-        'message',
         props.name,
+        'message',
         (event.target as HTMLTextAreaElement).value
       );
     };

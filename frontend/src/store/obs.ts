@@ -1,7 +1,10 @@
 import ObsWebSocket, { Scene, SceneItem } from 'obs-websocket-js';
-import { defineStore, StoreActions } from 'pinia';
+import { defineStore } from 'pinia';
 import logging from '../utils/logging';
 import { OBSCommand, OBSCommandActions } from './commands';
+
+type ARG<T> = T extends (requestType: infer U, ...args: any) => any ? U : T;
+type Action = ARG<ObsWebSocket['send']>;
 
 export const useObsStore = defineStore('obs', {
   state: () => ({
@@ -12,6 +15,15 @@ export const useObsStore = defineStore('obs', {
     scenes: [] as Scene[],
     connected: false,
   }),
+  getters: {
+    sources(): SceneItem[] {
+      const sources: SceneItem[] = [];
+      this.scenes.forEach((scene) => {
+        sources.push(...scene.sources);
+      });
+      return sources;
+    },
+  },
   actions: {
     async connect(): Promise<ObsWebSocket> {
       if (this.connected && this.connection) {
