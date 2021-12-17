@@ -21,22 +21,23 @@ export const Role = Object.freeze({
   Viewer: 40,
 });
 
-type RoleKeys = keyof typeof Role;
-type RoleValues = typeof Role[RoleKeys];
+export type RoleKeys = keyof typeof Role;
+export type RoleValues = typeof Role[RoleKeys];
 
-export type BaseCommand = {
+export interface BaseCommand {
+  id: string;
   name: string;
-  type: CommandType;
+  type?: CommandType;
   role: RoleValues;
-};
+}
 
-export type ChatCommand = BaseCommand & {
-  type: CommandType.Chat;
+export interface ChatCommand extends BaseCommand {
+  type?: CommandType.Chat;
   message: string; // should support substitutions
-};
+}
 
-export type OBSCommand = BaseCommand & {
-  type: CommandType.OBS;
+export interface OBSCommand extends BaseCommand {
+  type?: CommandType.OBS;
   action: OBSCommandActions;
   args: Partial<{
     name: string;
@@ -44,7 +45,7 @@ export type OBSCommand = BaseCommand & {
   }>;
   duration?: number;
   running?: boolean;
-};
+}
 
 export type Command = ChatCommand | OBSCommand;
 
@@ -93,6 +94,9 @@ export const useCommandsStore = defineStore('commands', {
         }
       }
     },
+  },
+  persist: {
+    enabled: true,
   },
 });
 

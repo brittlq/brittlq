@@ -56,8 +56,8 @@ export const useTwitchChatStore = defineStore('twitch/chat', {
       const commandsStore = useCommandsStore();
       if (msg.startsWith(commandsStore.prefix)) {
         const cmdName = msg.split(' ')[0].replace(commandsStore.prefix, ''); // get the first group of characters by whitespace, remove the prefix character
-        const cmd = commandsStore.commands.find((command) =>
-          command.name.includes(cmdName)
+        const cmd = commandsStore.commands.find(
+          (command) => command.name === cmdName
         );
         if (cmd) {
           commandsStore.execute(cmd, messageData);
