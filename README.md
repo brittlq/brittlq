@@ -2,7 +2,7 @@
 
 Simple client-side chatbot for Twitch used for queueing chat members for community engagement.
 
-[![Actions Status](https://github.com/trollham/brittlq/workflows/CI/badge.svg)](https://github.com/trollham/brittlq/actions)
+[![Actions Status](https://github.com/brittlq/brittlq/workflows/CI/badge.svg)](https://github.com/brittlq/brittlq/actions)
 
 ## Building
 
