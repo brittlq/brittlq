@@ -45,6 +45,7 @@
           divide-y divide-gray-100
           bg-gray-200
           border-gray-900 border border-t-0
+          z-50
         "
       >
         <MenuItem v-slot="{ active }">
