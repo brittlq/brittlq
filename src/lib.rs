@@ -1,7 +1,9 @@
-use chrono::prelude::*;
 use chrono::Local;
 use serde::{Deserialize, Serialize, Serializer};
 use std::collections::VecDeque;
+use time::format_description::FormatItem;
+use time::macros::format_description;
+use time::OffsetDateTime;
 use tokio::sync::oneshot;
 use tracing::{subscriber::set_global_default, Subscriber};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
@@ -43,19 +45,21 @@ pub enum StateCommand {
     ToggleQueue(oneshot::Sender<bool>),
 }
 
-fn serialize_datetime<S>(date_time: &DateTime<Local>, s: S) -> Result<S::Ok, S::Error>
+fn serialize_datetime<S>(date_time: &OffsetDateTime, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    const TIME_FMT: &str = "%H:%M:%S";
-    s.serialize_str(&date_time.format(TIME_FMT).to_string())
+    // const TIME_FMT: &str = "%H:%M:%S"; // temporarily leaving for reference
+    const FORMAT: &[FormatItem] = format_description!("[hour]:[minute]:[second]");
+    let formatted = date_time.format(FORMAT);
+    s.serialize_str(&formatted.unwrap()) //unwrapping here, good practice or bad?
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UserEntry {
     pub nickname: String,
     #[serde(serialize_with = "serialize_datetime")]
-    pub time_joined: DateTime<Local>,
+    pub time_joined: OffsetDateTime,
     pub id: Uuid,
 }
 
@@ -136,7 +140,7 @@ pub async fn init_state(
                     } else {
                         state.queue.push_back(UserEntry {
                             nickname: user,
-                            time_joined: Local::now(),
+                            time_joined: OffsetDateTime::now_local().unwrap(),
                             id: Uuid::new_v4(),
                         });
                         tx.send(state.queue.len() - 1).unwrap();
