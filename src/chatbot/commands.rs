@@ -1,4 +1,4 @@
-use std::time::Duration as StdDuration;
+use std::{convert::TryFrom, time::Duration as StdDuration};
 use time::{Duration, OffsetDateTime};
 
 use crate::chatbot::actions;
@@ -60,11 +60,8 @@ impl Command {
                     }
                 }
                 ScriptAction::Wait(duration) => {
-                    tokio::time::sleep(StdDuration::new(
-                        duration.whole_seconds().unsigned_abs(),
-                        duration.subsec_nanoseconds().unsigned_abs(),
-                    )) // Safe to unwrap because we check for positive values at the time the command is created
-                    .await;
+                    tokio::time::sleep(StdDuration::try_from(*duration).unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
+                        .await;
                 }
             }
         }
