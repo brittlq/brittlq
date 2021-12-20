@@ -60,8 +60,11 @@ impl Command {
                     }
                 }
                 ScriptAction::Wait(duration) => {
-                    tokio::time::sleep(duration.to_std().unwrap()) // Safe to unwrap because we check for positive values at the time the command is created
-                        .await;
+                    tokio::time::sleep(StdDuration::new(
+                        duration.whole_seconds().unsigned_abs(),
+                        duration.subsec_nanoseconds().unsigned_abs(),
+                    )) // Safe to unwrap because we check for positive values at the time the command is created
+                    .await;
                 }
             }
         }
