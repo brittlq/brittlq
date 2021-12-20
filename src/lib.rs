@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize, Serializer};
 use std::collections::VecDeque;
-use time::format_description::FormatItem;
-use time::macros::format_description;
 use time::OffsetDateTime;
 use tokio::sync::oneshot;
 use tracing::{subscriber::set_global_default, Subscriber};
@@ -48,10 +46,11 @@ fn serialize_datetime<S>(date_time: &OffsetDateTime, s: S) -> Result<S::Ok, S::E
 where
     S: Serializer,
 {
-    // const TIME_FMT: &str = "%H:%M:%S"; // temporarily leaving for reference
-    const FORMAT: &[FormatItem] = format_description!("[hour]:[minute]:[second]");
-    let formatted = date_time.format(FORMAT);
-    s.serialize_str(&formatted.unwrap()) //unwrapping here, good practice or bad?
+    s.serialize_str(
+        &date_time
+            .format(&time::format_description::well_known::Rfc3339)
+            .unwrap(),
+    )
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
