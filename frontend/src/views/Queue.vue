@@ -3,14 +3,7 @@
     <QueueControls
       :queue-length="queue.length"
       @queuePop="queuePop"
-      class="
-        flex flex-row
-        justify-around
-        w-full
-        p-2
-        border-b border-gray-900
-        bg-gray-200
-      "
+      class="flex flex-row justify-around w-full p-2 border-b border-gray-900 bg-gray-200"
     />
     <table class="queue table-auto flex-1">
       <thead>
@@ -40,13 +33,14 @@ import QueueControls from '@/components/queue/QueueControls.vue';
 import { defineComponent } from '@vue/runtime-core';
 import { mapState } from 'vuex';
 import { UPDATE } from '@/store/queue/operations';
+import { User } from '@/store/queue';
 
 interface Data {
   intervalId: number;
 }
 
 export default defineComponent({
-  name: 'Queue',
+  name: 'PlayerQueue',
   components: { QueueControls, QueueEntry },
   data(): Data {
     return {
@@ -72,7 +66,7 @@ export default defineComponent({
         console.error(exc);
       }
     },
-    remove(user) {
+    remove(user: User) {
       if (user) {
         console.log('Removing: ', user);
         var index = this.queue.indexOf(user.nickname);
@@ -87,13 +81,7 @@ export default defineComponent({
         });
       }
     },
-    auth(event) {
-      if (event) {
-        let token = document.location.hash;
-        console.log(token);
-      }
-    },
-    queuePop(queue) {
+    queuePop(queue: User[]) {
       this.queue = queue;
     },
   },

@@ -38,6 +38,7 @@ import {
 } from '../store/obs/operations';
 import Source from '@/components/obs/Source.vue';
 export default defineComponent({
+  name: 'OBSView',
   methods: {
     connect() {
       this.$store.dispatch(OBS_CONNECT);

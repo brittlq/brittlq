@@ -20,15 +20,16 @@
 <script lang="ts">
 import Message from './Message.vue';
 import { CONNECT_TO_CHAT } from '@/store/twitch/chat/operations';
-import { Message as ChatMessage } from '@/store/twitch/chat';
-import { defineComponent } from '@vue/runtime-core';
+import { Message as IMessage } from '@/store/twitch/chat';
+import { defineComponent } from 'vue';
 export default defineComponent({
+  name: 'ChatMessages',
   components: { Message },
   mounted() {
     this.$store.dispatch(CONNECT_TO_CHAT);
   },
   computed: {
-    messages(): ChatMessage[] {
+    messages(): IMessage[] {
       return this.$store.state.twitch.chat?.messages ?? [];
     },
     chatOpen(): boolean {

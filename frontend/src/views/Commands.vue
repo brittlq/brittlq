@@ -5,7 +5,9 @@
 <script lang="ts">
 import { defineComponent } from '@vue/runtime-core';
 
-export default defineComponent({});
+export default defineComponent({
+  name: 'BotCommands'
+});
 </script>
 
 <style></style>

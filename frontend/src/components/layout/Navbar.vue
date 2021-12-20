@@ -108,6 +108,7 @@ import { TOGGLE_CHAT_SIDEBAR } from '../../store/mutations';
 import { CLEAR_TOKEN } from '@/store/twitch/operations';
 import { defineComponent } from '@vue/runtime-core';
 export default defineComponent({
+  name: 'AppNavbar',
   components: {
     Menu,
     MenuButton,

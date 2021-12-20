@@ -10,6 +10,7 @@ import { defineComponent, PropType } from '@vue/runtime-core';
 import { ChatUserstate } from 'tmi.js';
 
 export default defineComponent({
+  name: 'ChatMessage',
   props: {
     msg: {
       type: String,
