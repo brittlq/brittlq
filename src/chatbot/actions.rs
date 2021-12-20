@@ -1,4 +1,4 @@
-use chrono::Duration;
+use time::Duration;
 
 use super::commands::{AccessLevel, Command};
 
@@ -28,7 +28,7 @@ peg::parser! {
 
         rule number() -> u32 = n:$(['0'..='9']+) {? n.parse::<u32>().or(Err("u32")) }
 
-        rule seconds(limit: u32) -> chrono::Duration = s:number() {?
+        rule seconds(limit: u32) -> time::Duration = s:number() {?
             let limit = if limit == 0 || limit > 900 {
                 900
             }
@@ -37,7 +37,7 @@ peg::parser! {
             };
             match s
             {
-                1..=900 => Ok(chrono::Duration::seconds(s as i64)),
+                1..=900 => Ok(time::Duration::seconds(s as i64)),
                 _ => Err("Number must be between 1 and 900")
             }
         }
@@ -110,8 +110,8 @@ mod tests {
         actions::{action_parser, ActionTag, EditorAction, ScriptAction},
         commands::{AccessLevel, Command, ExecutionError},
     };
-    use chrono::Duration;
     use irc::client::prelude::Config;
+    use time::Duration;
 
     fn test_config() -> irc::client::prelude::Config {
         irc::client::prelude::Config {
@@ -159,11 +159,11 @@ mod tests {
     fn wait() {
         assert_eq!(
             action_parser::wait("wait 1"),
-            Ok(ScriptAction::Wait(chrono::Duration::seconds(1)))
+            Ok(ScriptAction::Wait(time::Duration::seconds(1)))
         );
         assert_eq!(
             action_parser::wait("wait 257"),
-            Ok(ScriptAction::Wait(chrono::Duration::seconds(257)))
+            Ok(ScriptAction::Wait(time::Duration::seconds(257)))
         );
         assert!(action_parser::wait("wait").is_err());
         assert!(action_parser::wait("wait 901").is_err());
@@ -204,7 +204,7 @@ mod tests {
                     access_level: AccessLevel::User,
                     script: vec![
                         ScriptAction::Say("hello".to_owned()),
-                        ScriptAction::Wait(chrono::Duration::seconds(1)),
+                        ScriptAction::Wait(time::Duration::seconds(1)),
                         ScriptAction::Say("world!".to_owned())
                     ],
                     cooldown: Duration::seconds(30),

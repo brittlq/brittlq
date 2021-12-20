@@ -1,4 +1,4 @@
-use chrono::Duration;
+use time::Duration;
 
 use crate::chatbot::actions;
 
