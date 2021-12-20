@@ -1,4 +1,5 @@
-use time::Duration;
+use std::time::Duration as StdDuration;
+use time::{Duration, OffsetDateTime};
 
 use crate::chatbot::actions;
 
@@ -29,7 +30,7 @@ pub struct Command {
     pub access_level: AccessLevel,
     pub script: Vec<ScriptAction>,
     pub cooldown: Duration,
-    pub last_execution: Option<chrono::DateTime<chrono::Utc>>,
+    pub last_execution: Option<OffsetDateTime>,
 }
 
 impl Command {
@@ -40,12 +41,12 @@ impl Command {
     ) -> Result<(), ExecutionError> {
         let le = self
             .last_execution
-            .unwrap_or(chrono::Utc::now() - self.cooldown);
-        let time_elapsed = chrono::Utc::now() - le;
+            .unwrap_or(time::OffsetDateTime::now_utc() - self.cooldown);
+        let time_elapsed = time::OffsetDateTime::now_utc() - le;
         if time_elapsed < self.cooldown {
             return Err(ExecutionError::Cooldown(self.cooldown - time_elapsed));
         }
-        self.last_execution = Some(chrono::Utc::now());
+        self.last_execution = Some(time::OffsetDateTime::now_utc());
         for action in &self.script {
             match action {
                 ScriptAction::Say(msg) => {
