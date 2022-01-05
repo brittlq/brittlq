@@ -3,15 +3,7 @@
     <QueueControls
       :queue-length="queue.length"
       @queuePop="queuePop"
-      :start-open="isOpen"
-      class="
-        flex flex-row
-        justify-around
-        w-full
-        p-2
-        border-b border-gray-900
-        bg-gray-200
-      "
+      class="flex flex-row justify-around w-full p-2 border-b border-gray-900 bg-gray-200"
     />
     <table class="queue table-auto flex-1">
       <thead>
@@ -28,7 +20,6 @@
           :key="user.id"
           :entry="user"
           :index="index + 1"
-          @remove-user="remove"
           class="queue-item"
         ></QueueEntry>
       </tbody>
@@ -36,15 +27,25 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import QueueEntry from '@/components/queue/QueueEntry.vue';
 import QueueControls from '@/components/queue/QueueControls.vue';
+import { defineComponent } from '@vue/runtime-core';
+import { mapState } from 'vuex';
+import { UPDATE } from '@/store/queue/operations';
+import { User } from '@/store/queue';
 
-export default {
-  name: 'Queue',
+interface Data {
+  intervalId: number;
+}
+
+export default defineComponent({
+  name: 'PlayerQueue',
   components: { QueueControls, QueueEntry },
-  data() {
-    return { isOpen: false, queue: [], isConnected: false, intervalId: null };
+  data(): Data {
+    return {
+      intervalId: 0,
+    };
   },
   created() {},
   mounted() {
@@ -54,39 +55,37 @@ export default {
   unmounted() {
     window.clearInterval(this.intervalId);
   },
+  computed: {
+    ...mapState('queue', ['queue']),
+  },
   methods: {
     async poll() {
       try {
-        const { data } = await this.$axios.get('/queue/');
-        this.queue = data.queue;
-        this.isOpen = data.is_open;
+        this.$store.dispatch(UPDATE);
       } catch (exc) {
         console.error(exc);
       }
     },
-    remove(user) {
+    remove(user: User) {
       if (user) {
         console.log('Removing: ', user);
         var index = this.queue.indexOf(user.nickname);
         if (index >= 0) {
-          this.queue.splice(index, 1);
+          this.$axios.delete('/queue/' + user.nickname).then((response) => {
+            this.queue.splice(index, 1);
+            console.log('Confirmed removal of ', response);
+          });
         }
         this.$axios.delete('/queue/' + user.nickname).then((response) => {
           console.log('Confirmed removal of ', response);
         });
       }
     },
-    auth(event) {
-      if (event) {
-        let token = document.location.hash;
-        console.log(token);
-      }
-    },
-    queuePop(queue) {
+    queuePop(queue: User[]) {
       this.queue = queue;
     },
   },
-};
+});
 </script>
 
 <style scoped>

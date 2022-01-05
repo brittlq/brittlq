@@ -4,10 +4,7 @@
     <td class="p-1">{{ entry.nickname }}</td>
     <td class="p-1">{{ entry.time_joined }}</td>
     <td class="p-1">
-      <button
-        @click="$emit('remove-user', entry)"
-        class="btn btn-outline-danger"
-      >
+      <button @click="removeUser(entry)" class="btn btn-outline-danger">
         <fa-icon icon="minus-circle" />
         remove
       </button>
@@ -15,12 +12,16 @@
   </tr>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { User } from '@/store/queue';
+import { REMOVE_USER } from '@/store/queue/operations';
+import { defineComponent, PropType } from '@vue/runtime-core';
+
+export default defineComponent({
   props: {
     entry: {
       required: true,
-      type: Object,
+      type: Object as PropType<User>,
     },
     index: {
       required: true,
@@ -28,5 +29,10 @@ export default {
     },
   },
   emits: ['remove-user'],
-};
+  methods: {
+    removeUser(user: User) {
+      this.$store.commit(`obs/${REMOVE_USER}`, { user });
+    },
+  },
+});
 </script>

@@ -5,31 +5,36 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent, PropType } from '@vue/runtime-core';
+import { ChatUserstate } from 'tmi.js';
+
+export default defineComponent({
+  name: 'ChatMessage',
   props: {
     msg: {
       type: String,
       required: true,
     },
-    username: {
+    userstate: {
+      type: Object as PropType<ChatUserstate>,
+      required: true,
+    },
+    id: {
       type: String,
       required: true,
     },
-    userId: {
+    channel: {
       type: String,
       required: true,
-    },
-    isMod: {
-      type: Boolean,
-      default: false,
-    },
-    isSub: {
-      type: Boolean,
-      default: false,
     },
   },
-};
+  computed: {
+    username(): string {
+      return this.userstate.username ?? '';
+    },
+  },
+});
 </script>
 
 <style></style>

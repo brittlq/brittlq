@@ -6,76 +6,37 @@
       'flex-col overflow-y-scroll',
       'relative',
       'duration-300',
-      { closed: !open },
+      { closed: !chatOpen },
     ]"
   >
-    <message
+    <Message
       v-for="message in messages"
       :key="message.id"
       v-bind="message"
-    ></message>
+    ></Message>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Message from './Message.vue';
-import { Client } from 'tmi.js';
-import { mapState } from 'vuex';
-export default {
+import { CONNECT_TO_CHAT } from '@/store/twitch/chat/operations';
+import { Message as IMessage } from '@/store/twitch/chat';
+import { defineComponent } from 'vue';
+export default defineComponent({
+  name: 'ChatMessages',
   components: { Message },
-  data() {
-    return {
-      messages: [],
-      client: null,
-    };
-  },
   mounted() {
-    this.client = new Client({
-      connection: { reconnect: true, secure: true },
-      channels: [this.channel],
-      identity: {
-        username: this.botName,
-        password: this.token,
-      },
-      options: { clientId: this.clientId, skipUpdatingEmotesets: true },
-    });
-    this.client.on('connected', (addr, port) => {
-      console.log(`Made connection to twitch chat on ${addr}:${port}`);
-    });
-    this.client.on('message', this.onMessage);
-    this.client.connect();
-  },
-  methods: {
-    onMessage(channel, tags, msg, self) {
-      if (self) return;
-      this.messages.push({
-        msg,
-        userId: tags['user-id'],
-        username: tags.username,
-        displayName: tags['display-name'],
-        mod: tags.mod,
-        sub: tags.subscriber,
-      });
-    },
+    this.$store.dispatch(CONNECT_TO_CHAT);
   },
   computed: {
-    token() {
-      return this.$store.state.token;
+    messages(): IMessage[] {
+      return this.$store.state.twitch.chat?.messages ?? [];
     },
-    botName() {
-      return this.$store.state.botName;
+    chatOpen(): boolean {
+      return this.$store.state.common.chatSidebarOpen;
     },
-    channel() {
-      return this.$store.state.channel;
-    },
-    clientId() {
-      return this.$store.state.oauth.twitch.clientId;
-    },
-    ...mapState({
-      open: 'chatSidebarOpen',
-    }),
   },
-};
+});
 </script>
 
 <style scoped>
