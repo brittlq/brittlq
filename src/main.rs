@@ -54,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
     let state_task = brittlq::init_state(state_rx);
 
     let server_task = tokio::spawn(async move {
-        let server = warp::serve(endpoints::queue(state_tx, chat_tx));
+        let server = warp::serve(endpoints::queue_routes(state_tx, chat_tx));
         server.run(([0, 0, 0, 0], 8080)).await;
         Ok(()) as anyhow::Result<()>
     });

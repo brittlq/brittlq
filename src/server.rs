@@ -23,15 +23,15 @@ mod handlers {
     use std::convert::Infallible;
     use tokio::sync::oneshot;
 
-    pub async fn delete_user(user: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        let removed_users = dispatch(tx, resp_rx, StateCommand::RemoveUser { user, tx: resp_tx })
-            .await
-            .unwrap();
-        Ok(warp::reply::json(&removed_users))
-    }
+    // pub async fn delete_user(user: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+    //     let (resp_tx, resp_rx) = oneshot::channel();
+    //     let removed_users = dispatch(tx, resp_rx, StateCommand::RemoveUser { user, tx: resp_tx })
+    //         .await
+    //         .unwrap();
+    //     Ok(warp::reply::json(&removed_users))
+    // }
 
-    pub async fn get_queue(tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+    pub async fn get_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
         let (resp_tx, resp_rx) = oneshot::channel();
         let queue_status = dispatch(tx, resp_rx, StateCommand::GetQueue(resp_tx))
             .await
@@ -39,63 +39,75 @@ mod handlers {
         Ok(warp::reply::json(&queue_status))
     }
 
-    pub async fn toggle_queue(
-        tx: StateTx,
-        chatbot_tx: chatbot::Tx,
-    ) -> Result<impl warp::Reply, Infallible> {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        let queue_status = dispatch(tx, resp_rx, StateCommand::ToggleQueue(resp_tx))
-            .await
-            .unwrap();
-        chatbot_tx
-            .send(Commands::SendMessage(format!(
-                "The queue is now {}.",
-                if queue_status { "open" } else { "closed" }
-            )))
-            .await
-            .unwrap();
-        Ok(warp::reply::json(&queue_status))
+    pub async fn post_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+        Ok("Coming soon!")
     }
 
-    pub async fn pop_queue(
-        args: NextQueryArg,
-        tx: StateTx,
-        chatbot_tx: chatbot::Tx,
-    ) -> Result<impl warp::Reply, Infallible> {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        tracing::debug!("Popping: {}", args.count.unwrap_or(4));
-        let popped_entries = dispatch(
-            tx,
-            resp_rx,
-            StateCommand::PopQueue {
-                count: args.count.unwrap_or(4),
-                tx: resp_tx,
-            },
-        )
-        .await
-        .unwrap();
-        if let Some(popped) = &popped_entries {
-            let temp_users = popped
-                .iter()
-                .map(|u| u.nickname.clone())
-                .collect::<Vec<String>>();
-            let names_message = temp_users.join(", @");
-            chatbot_tx
-                .send(Commands::SendMessage(format!(
-                    "Up next: @{}. You can reach BK in game with the following message: @brittleknee Hi.",
-                    names_message
-                )))
-                .await
-                .unwrap();
-        }
-        Ok(warp::reply::json(&popped_entries))
+    pub async fn delete_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+        Ok("Coming soon!")
     }
 
-    pub async fn send_token(token: Token, tx: chatbot::Tx) -> Result<impl warp::Reply, Infallible> {
-        Ok(warp::reply::json(
-            &tx.send(chatbot::Commands::Token(token)).await.unwrap(),
-        ))
+    pub async fn put_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+        Ok("Coming soon!")
     }
+
+    // pub async fn toggle_queue(
+    //     tx: StateTx,
+    //     chatbot_tx: chatbot::Tx,
+    // ) -> Result<impl warp::Reply, Infallible> {
+    //     let (resp_tx, resp_rx) = oneshot::channel();
+    //     let queue_status = dispatch(tx, resp_rx, StateCommand::ToggleQueue(resp_tx))
+    //         .await
+    //         .unwrap();
+    //     chatbot_tx
+    //         .send(Commands::SendMessage(format!(
+    //             "The queue is now {}.",
+    //             if queue_status { "open" } else { "closed" }
+    //         )))
+    //         .await
+    //         .unwrap();
+    //     Ok(warp::reply::json(&queue_status))
+    // }
+
+    // pub async fn pop_queue(
+    //     args: NextQueryArg,
+    //     tx: StateTx,
+    //     chatbot_tx: chatbot::Tx,
+    // ) -> Result<impl warp::Reply, Infallible> {
+    //     let (resp_tx, resp_rx) = oneshot::channel();
+    //     tracing::debug!("Popping: {}", args.count.unwrap_or(4));
+    //     let popped_entries = dispatch(
+    //         tx,
+    //         resp_rx,
+    //         StateCommand::PopQueue {
+    //             count: args.count.unwrap_or(4),
+    //             tx: resp_tx,
+    //         },
+    //     )
+    //     .await
+    //     .unwrap();
+    //     if let Some(popped) = &popped_entries {
+    //         let temp_users = popped
+    //             .iter()
+    //             .map(|u| u.nickname.clone())
+    //             .collect::<Vec<String>>();
+    //         let names_message = temp_users.join(", @");
+    //         chatbot_tx
+    //             .send(Commands::SendMessage(format!(
+    //                 "Up next: @{}. You can reach BK in game with the following message: @brittleknee Hi.",
+    //                 names_message
+    //             )))
+    //             .await
+    //             .unwrap();
+    //     }
+    //     Ok(warp::reply::json(&popped_entries))
+    // }
+
+    // pub async fn send_token(token: Token, tx: chatbot::Tx) -> Result<impl warp::Reply, Infallible> {
+    //     Ok(warp::reply::json(
+    //         &tx.send(chatbot::Commands::Token(token)).await.unwrap(),
+    //     ))
+    // }
 }
 
 pub mod endpoints {
@@ -104,20 +116,25 @@ pub mod endpoints {
 
     use warp::Filter;
 
-    pub fn queue(
+    const QUEUES_ROUTE: &str = "queues";
+
+    pub fn queue_routes(
         tx: StateTx,
         chatbot_tx: chatbot::Tx,
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
         queue_get(tx.clone())
-            .or(queue_pop(tx.clone(), chatbot_tx.clone()))
-            .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
-            .or(token(chatbot_tx))
-            .or(user_delete(tx))
-            .or(health())
-            .or(warp::fs::dir("./dist/"))
-            .with(warp::trace(
-                |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
-            ))
+        //         queue_get(tx.clone())
+        //             .or(queue_pop(tx.clone(), chatbot_tx.clone()))
+        //             .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
+        //             .or(token(chatbot_tx))
+        //             .or(user_delete(tx))
+        //             .or(health())
+        //             .or(warp::fs::dir("./dist/")),
+        //     ),
+        // )
+        // .with(warp::trace(
+        //     |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
+        // ))
     }
 
     fn with_tx<T>(
@@ -133,25 +150,26 @@ pub mod endpoints {
     pub fn user_delete(
         tx: StateTx,
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!("queue" / String)
+        warp::path!(String)
             .and(warp::delete())
             .and(with_tx(tx))
             .and_then(handlers::delete_user)
             .with(warp::trace::named("user"))
     }
 
-    // GET /queue
+    // GET /queue/:name
     pub fn queue_get(
         tx: StateTx,
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!("queue")
+        warp::path(QUEUES_ROUTE)
+            .and(warp::path::param().and(warp::path::end()))
             .and(warp::get())
             .and(with_tx(tx))
             .and_then(handlers::get_queue)
             .with(warp::trace::named("queue"))
     }
 
-    // GET /queue/toggle
+    // GET /queue/:name
     pub fn queue_toggle(
         tx: StateTx,
         chatbot_tx: chatbot::Tx,
@@ -163,7 +181,7 @@ pub mod endpoints {
             .and_then(handlers::toggle_queue)
             .with(warp::trace::named("toggle"))
     }
-    // GET /queue/pop?:u16
+    // GET /queue/:name/pop?:u16
     pub fn queue_pop(
         tx: StateTx,
         chatbot_tx: chatbot::Tx,
