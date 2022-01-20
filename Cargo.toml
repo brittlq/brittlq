@@ -16,17 +16,18 @@ async-trait = "0.1"
 config = "0.11"
 futures = "0.3"
 irc = "0.15"
-peg = "0.7"
+peg = "0.8.0"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["rc"] }
 serde_json = "1.0"
+sqlx = { version = "0.5", features = ["postgres", "runtime-tokio-native-tls"]}
 thiserror = "1.0"
 time = { version = "0.3.5", features = ["serde", "formatting", "local-offset"] }
 tokio = { version = "1.2", features = ["full"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-bunyan-formatter = "0.2"
+tracing-bunyan-formatter = "0.3.1"
 tracing-futures = "0.2"
 tracing-log = "0.1"
-tracing-subscriber = { version = "0.2", features = ["registry", "env-filter"] }
+tracing-subscriber = { version = "0.3.5", features = ["registry", "env-filter"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 warp = "0.3"
