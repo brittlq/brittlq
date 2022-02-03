@@ -1,27 +1,12 @@
-use oneshot::error::RecvError;
-use serde::Deserialize;
-use tokio::sync::oneshot;
+pub mod queue;
 
-use crate::{StateCommand, StateRx, StateTx};
+use warp::Filter;
 
-async fn dispatch<T>(tx: StateTx, rx: StateRx<T>, command: StateCommand) -> Result<T, RecvError> {
-    tx.send(command).await.unwrap();
-    rx.await
-}
-
-#[derive(Debug, Deserialize)]
-pub struct NextQueryArg {
-    count: Option<u16>,
-}
+use crate::StateTx;
 
 mod handlers {
-    use super::{dispatch, NextQueryArg};
-    use crate::{
-        chatbot::{self, Commands},
-        StateCommand, StateTx, Token,
-    };
+    use crate::StateTx;
     use std::convert::Infallible;
-    use tokio::sync::oneshot;
 
     // pub async fn delete_user(user: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
     //     let (resp_tx, resp_rx) = oneshot::channel();
@@ -31,13 +16,13 @@ mod handlers {
     //     Ok(warp::reply::json(&removed_users))
     // }
 
-    pub async fn get_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        let queue_status = dispatch(tx, resp_rx, StateCommand::GetQueue(resp_tx))
-            .await
-            .unwrap();
-        Ok(warp::reply::json(&queue_status))
-    }
+    // pub async fn get_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
+    //     let (resp_tx, resp_rx) = oneshot::channel();
+    //     let queue_status = dispatch(tx, resp_rx, StateCommand::GetQueue(resp_tx))
+    //         .await
+    //         .unwrap();
+    //     Ok(warp::reply::json(&queue_status))
+    // }
 
     pub async fn post_queue(name: String, tx: StateTx) -> Result<impl warp::Reply, Infallible> {
         Ok("Coming soon!")
@@ -110,32 +95,38 @@ mod handlers {
     // }
 }
 
-pub mod endpoints {
-    use super::{handlers, NextQueryArg, StateTx};
-    use crate::chatbot;
+pub fn with_pool<T: sqlx::Database>(
+    tx: sqlx::Pool<T>,
+) -> impl Filter<Extract = (sqlx::Pool<T>,), Error = std::convert::Infallible> + Clone
+where
+    T: Send + Sync,
+{
+    warp::any().map(move || tx.clone())
+}
 
+pub mod endpoints {
     use warp::Filter;
 
     const QUEUES_ROUTE: &str = "queues";
 
-    pub fn queue_routes(
-        tx: StateTx,
-        chatbot_tx: chatbot::Tx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        queue_get(tx.clone())
-        //         queue_get(tx.clone())
-        //             .or(queue_pop(tx.clone(), chatbot_tx.clone()))
-        //             .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
-        //             .or(token(chatbot_tx))
-        //             .or(user_delete(tx))
-        //             .or(health())
-        //             .or(warp::fs::dir("./dist/")),
-        //     ),
-        // )
-        // .with(warp::trace(
-        //     |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
-        // ))
-    }
+    // pub fn queue_routes(
+    //     tx: StateTx,
+    //     chatbot_tx: chatbot::Tx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     queue_get(tx.clone())
+    //     //         queue_get(tx.clone())
+    //     //             .or(queue_pop(tx.clone(), chatbot_tx.clone()))
+    //     //             .or(queue_toggle(tx.clone(), chatbot_tx.clone()))
+    //     //             .or(token(chatbot_tx))
+    //     //             .or(user_delete(tx))
+    //     //             .or(health())
+    //     //             .or(warp::fs::dir("./dist/")),
+    //     //     ),
+    //     // )
+    //     // .with(warp::trace(
+    //     //     |info| tracing::info_span!("API request", method = %info.method(), path = %info.path(), id = %uuid::Uuid::new_v4().to_hyphenated()),
+    //     // ))
+    // }
 
     fn with_tx<T>(
         tx: tokio::sync::mpsc::Sender<T>,
@@ -147,53 +138,53 @@ pub mod endpoints {
     }
 
     // DELETE /queue/:name
-    pub fn user_delete(
-        tx: StateTx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!(String)
-            .and(warp::delete())
-            .and(with_tx(tx))
-            .and_then(handlers::delete_user)
-            .with(warp::trace::named("user"))
-    }
+    // pub fn user_delete(
+    //     tx: StateTx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     warp::path!(String)
+    //         .and(warp::delete())
+    //         .and(with_tx(tx))
+    //         .and_then(handlers::delete_user)
+    //         .with(warp::trace::named("user"))
+    // }
 
     // GET /queue/:name
-    pub fn queue_get(
-        tx: StateTx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path(QUEUES_ROUTE)
-            .and(warp::path::param().and(warp::path::end()))
-            .and(warp::get())
-            .and(with_tx(tx))
-            .and_then(handlers::get_queue)
-            .with(warp::trace::named("queue"))
-    }
+    // pub fn queue_get(
+    //     tx: StateTx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     warp::path(QUEUES_ROUTE)
+    //         .and(warp::path::param().and(warp::path::end()))
+    //         .and(warp::get())
+    //         .and(with_tx(tx))
+    //         .and_then(handlers::get_queue)
+    //         .with(warp::trace::named("queue"))
+    // }
 
     // GET /queue/:name
-    pub fn queue_toggle(
-        tx: StateTx,
-        chatbot_tx: chatbot::Tx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!("queue" / "toggle")
-            .and(warp::get())
-            .and(with_tx(tx))
-            .and(with_tx(chatbot_tx))
-            .and_then(handlers::toggle_queue)
-            .with(warp::trace::named("toggle"))
-    }
+    // pub fn queue_toggle(
+    //     tx: StateTx,
+    //     chatbot_tx: chatbot::Tx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     warp::path!("queue" / "toggle")
+    //         .and(warp::get())
+    //         .and(with_tx(tx))
+    //         .and(with_tx(chatbot_tx))
+    //         .and_then(handlers::toggle_queue)
+    //         .with(warp::trace::named("toggle"))
+    // }
     // GET /queue/:name/pop?:u16
-    pub fn queue_pop(
-        tx: StateTx,
-        chatbot_tx: chatbot::Tx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!("queue" / "pop")
-            .and(warp::get())
-            .and(warp::query::<NextQueryArg>())
-            .and(with_tx(tx))
-            .and(with_tx(chatbot_tx))
-            .and_then(handlers::pop_queue)
-            .with(warp::trace::named("pop"))
-    }
+    // pub fn queue_pop(
+    //     tx: StateTx,
+    //     chatbot_tx: chatbot::Tx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     warp::path!("queue" / "pop")
+    //         .and(warp::get())
+    //         .and(warp::query::<NextQueryArg>())
+    //         .and(with_tx(tx))
+    //         .and(with_tx(chatbot_tx))
+    //         .and_then(handlers::pop_queue)
+    //         .with(warp::trace::named("pop"))
+    // }
 
     // GET /health
     pub fn health() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
@@ -202,16 +193,16 @@ pub mod endpoints {
 
     // TODO This gets removed once the backend is running seperately. ATM we are using the implict auth flow, which is best for client side authentication.
     // Once this is no longer running on the client, we'll need to use an approach that utilizes client secrets instead.
-    pub fn token(
-        tx: chatbot::Tx,
-    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-        warp::path!("queue" / "token")
-            .and(warp::post())
-            .and(warp::body::json())
-            .and(with_tx(tx))
-            .and_then(handlers::send_token)
-            .with(warp::trace::named("token"))
-    }
+    // pub fn token(
+    //     tx: chatbot::Tx,
+    // ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //     warp::path!("queue" / "token")
+    //         .and(warp::post())
+    //         .and(warp::body::json())
+    //         .and(with_tx(tx))
+    //         .and_then(handlers::send_token)
+    //         .with(warp::trace::named("token"))
+    // }
 }
 
 #[cfg(test)]

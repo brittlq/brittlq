@@ -14,13 +14,14 @@ path = "src/lib.rs"
 anyhow = "1.0"
 async-trait = "0.1"
 config = "0.11"
+dotenv = "0.15"
 futures = "0.3"
 irc = "0.15"
 peg = "0.8.0"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["rc"] }
 serde_json = "1.0"
-sqlx = { version = "0.5", features = ["postgres", "runtime-tokio-native-tls"]}
+sqlx = { version = "0.5", features = ["json", "postgres", "runtime-tokio-native-tls"]}
 thiserror = "1.0"
 time = { version = "0.3.5", features = ["serde", "formatting", "local-offset"] }
 tokio = { version = "1.2", features = ["full"] }

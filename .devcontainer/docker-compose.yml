@@ -6,8 +6,6 @@ services:
       dockerfile: .devcontainer/Dockerfile
     volumes:
       - ..:/workspace:cached
-      - brittlq-extension-cache:/home/vscode/.vscode-server/extensions
-      - brittlq-globalStorage-cache:/home/vscode/.vscode-server/data/User/globalStorage
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -15,21 +13,12 @@ services:
     command: sleep infinity
     env_file: ./devcontainer.env
   db:
-    image: "postgres:13"
+    image: "postgres:14"
     restart: unless-stopped
-    volumes:
-      - db_data:/var/lib/postgresql/data
     env_file: ./devcontainer.env
-    network_mode: service:rust-dev
   nginx:
     build:
       context: .
       dockerfile: webserver.dockerfile
     restart: unless-stopped
     env_file: ./devcontainer.env
-    network_mode: service:rust-dev
-
-volumes:
-  db_data:
-  brittlq-extension-cache:
-  brittlq-globalStorage-cache:

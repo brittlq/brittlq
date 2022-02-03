@@ -97,6 +97,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "config",
+ "dotenv",
  "futures",
  "irc",
  "peg",
@@ -1457,6 +1458,7 @@ version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee2bb9cd061c5865d345bb02ca49fcef1391741b672b54a0bf7b679badec3142"
 dependencies = [
+ "indexmap",
  "itoa 1.0.1",
  "ryu",
  "serde 1.0.133",
@@ -1622,6 +1624,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
+ "serde_json",
  "sha2",
  "sqlx-core",
  "sqlx-rt",

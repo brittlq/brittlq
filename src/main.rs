@@ -1,48 +1,9 @@
-use brittlq::{
-    chatbot, config::get_user_config, register_subscriber, server::endpoints, subscriber_init,
-};
+use brittlq::{chatbot, config::get_user_config, register_subscriber, server, subscriber_init};
 use std::process::Command;
-
-/* THE BIG TODO
- * Split the tasks up:
- * 1. a task that is waiting on an mpsc::Receiver for info on how to change the queues
- *      * Must receive:
- *          [] User identity
- *              - Server: Twitch oauth token
- *              - chatbot: channel name
- *          [] Response oneshot channel
- * 2. API/Server task
- * 3. IRC chatbot task
- *
- * API and IRC tasks will both need to communicate with the Receiver task managing global state
- * API and IRC will also need to communicate between each other
- *
- * ┌────────────┐                  ┌────────────┐
- * │            │   API request    │            │ API-invoked command
- * │   client   │─────────────────>│   server   │<─────────────────────┐
- * │            │                  │            │                      │
- * └────────────┘                  └────────────┘                      v
- *                                        │                       ┌─────────┐
- *                                        │ chat message          │  state  │
- *                                        v                       └─────────┘
- *                                ┌───────────────┐                    ^
- *                                │               │                    │
- *                                │  IRC client   │<───────────────────┘
- *                                │               │ Chat-invoked command
- *                                └───────────────┘
- *                                        ^
- *                                        │  chat
- *                                        v
- *                                 ┌───────────────┐
- *                               ┌─┴─────────────┐ │
- *                               │               │ │
- *                               │  IRC channel  │ │
- *                               │               ├─┘
- *                               └───────────────┘
- */
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let _ = dotenv::dotenv();
     // Set up tracing system
     let subscriber = subscriber_init();
     register_subscriber(subscriber);
@@ -53,8 +14,13 @@ async fn main() -> anyhow::Result<()> {
 
     let state_task = brittlq::init_state(state_rx);
 
+    let database_url =
+        std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable must be set");
+
+    let sql_pool = sqlx::PgPool::connect(&database_url).await?;
+
     let server_task = tokio::spawn(async move {
-        let server = warp::serve(endpoints::queue_routes(state_tx, chat_tx));
+        let server = warp::serve(server::queue::api::routes(sql_pool));
         server.run(([0, 0, 0, 0], 8080)).await;
         Ok(()) as anyhow::Result<()>
     });
