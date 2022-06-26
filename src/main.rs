@@ -1,7 +1,15 @@
-use brittlq::{
-    chatbot, config::get_user_config, register_subscriber, server::endpoints, subscriber_init,
+use axum::{
+    routing::{get, get_service, post},
+    Extension, Router,
 };
-use std::process::Command;
+use brittlq::{
+    chatbot::{self, Commands},
+    config::get_user_config,
+    server::handlers,
+};
+use std::{net::SocketAddr, process::Command};
+use tower_http::{services::ServeDir, trace::TraceLayer};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 /* THE BIG TODO
  * Split the tasks up:
@@ -43,19 +51,40 @@ use std::process::Command;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Set up tracing system
-    let subscriber = subscriber_init();
-    register_subscriber(subscriber);
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| "brittlq_api=debug,tower_http=debug".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let (state_tx, state_rx) = tokio::sync::mpsc::channel(32);
-    let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel(4);
+    let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel::<Commands>(4);
     let bot_state_tx = state_tx.clone();
 
     let state_task = brittlq::init_state(state_rx);
 
+    let app = Router::new()
+        .route(
+            "/queue",
+            get(handlers::get_queue).delete(handlers::delete_user),
+        )
+        .route("/queue/pop", get(handlers::pop_queue))
+        .route("/queue/toggle", get(handlers::toggle_queue))
+        .route("/health", get(handlers::empty))
+        .fallback(get_service(ServeDir::new("./www/dist")).handle_error(handlers::handle_error))
+        .layer(Extension(state_tx))
+        .layer(Extension(chat_tx))
+        .layer(TraceLayer::new_for_http());
+
     let server_task = tokio::spawn(async move {
-        let server = warp::serve(endpoints::queue(state_tx, chat_tx));
-        server.run(([0, 0, 0, 0], 8080)).await;
+        let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+        tracing::debug!("listening on {}", addr);
+        axum::Server::bind(&addr)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
         Ok(()) as anyhow::Result<()>
     });
 
@@ -67,25 +96,7 @@ async fn main() -> anyhow::Result<()> {
             tracing::error!("Could not launch browser");
         }
     }
-
-    let mut auth = String::new();
-    if let Some(chatbot::Commands::Token(token)) = chat_rx.recv().await {
-        auth = format!("oauth:{}", token.access_token);
-    }
-
-    let runtime_config = get_user_config(&auth)?;
-    let mut bot = chatbot::Bot::new(runtime_config, chat_rx).await.unwrap();
-
-    let bot_task = tokio::spawn(async move {
-        chatbot::build_bot(&mut bot);
-        bot.run(bot_state_tx).await
-    });
-
     tokio::select! {
-        _ = bot_task => {
-            tracing::debug!("Bot task exited.");
-            Ok(()) as anyhow::Result<()>
-        }
         _ = server_task => {
             tracing::debug!("Server task exited.");
             Ok(()) as anyhow::Result<()>

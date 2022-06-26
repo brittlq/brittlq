@@ -13,6 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
+axum = "0.5"
 config = "0.11"
 futures = "0.3"
 irc = "0.15"
@@ -23,6 +24,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 time = { version = "0.3.5", features = ["serde", "formatting", "local-offset"] }
 tokio = { version = "1.2", features = ["full"] }
+tower-http = { version = "0.3", features = ["fs", "trace"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-bunyan-formatter = "0.2"
 tracing-futures = "0.2"

@@ -1,4 +1,4 @@
-use crate::{StateCommand, StateTx, Token};
+use crate::{StateCommand, StateTx};
 use async_trait::async_trait;
 use futures::prelude::*;
 mod irc {
@@ -13,7 +13,6 @@ pub mod commands;
 #[derive(Debug)]
 pub enum Commands {
     SendMessage(String),
-    Token(Token),
 }
 
 pub type Tx = tokio::sync::mpsc::Sender<Commands>;
@@ -164,7 +163,6 @@ impl Bot {
                 Some(command) = self.rx.recv() => {
                     match command {
                         Commands::SendMessage(message) => {sender.send_privmsg(&self.channel, &message).unwrap();},
-                        Commands::Token(_) => tracing::debug!("Already handled token"),
                     }
                 }
                 else => break,
