@@ -23,7 +23,6 @@ impl Default for NextQueryArg {
 pub mod handlers {
     use super::{dispatch, NextQueryArg};
     use crate::{
-        chatbot::{self, Commands},
         StateCommand, StateTx,
     };
     use axum::{
@@ -59,17 +58,9 @@ pub mod handlers {
 
     pub async fn toggle_queue(
         Extension(tx): Extension<StateTx>,
-        Extension(chatbot_tx): Extension<chatbot::Tx>,
     ) -> impl IntoResponse {
         let (resp_tx, resp_rx) = oneshot::channel();
         let queue_status = dispatch(tx, resp_rx, StateCommand::ToggleQueue(resp_tx))
-            .await
-            .unwrap();
-        chatbot_tx
-            .send(Commands::SendMessage(format!(
-                "The queue is now {}.",
-                if queue_status { "open" } else { "closed" }
-            )))
             .await
             .unwrap();
         Json(queue_status)
@@ -78,7 +69,6 @@ pub mod handlers {
     pub async fn pop_queue(
         args: Option<Query<NextQueryArg>>,
         Extension(tx): Extension<StateTx>,
-        Extension(chatbot_tx): Extension<chatbot::Tx>,
     ) -> impl IntoResponse {
         let Query(args) = args.unwrap_or_default();
         let (resp_tx, resp_rx) = oneshot::channel();
@@ -93,20 +83,6 @@ pub mod handlers {
         )
         .await
         .unwrap();
-        if let Some(popped) = &popped_entries {
-            let temp_users = popped
-                .iter()
-                .map(|u| u.nickname.clone())
-                .collect::<Vec<String>>();
-            let names_message = temp_users.join(", @");
-            chatbot_tx
-                .send(Commands::SendMessage(format!(
-                    "Up next: @{}. You can reach BK in game with the following message: @brittleknee Hi.",
-                    names_message
-                )))
-                .await
-                .unwrap();
-        }
         Json(popped_entries)
     }
 

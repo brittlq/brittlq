@@ -11,7 +11,6 @@ use uuid::Uuid;
 pub type StateTx = tokio::sync::mpsc::Sender<StateCommand>;
 pub type StateRx<T> = tokio::sync::oneshot::Receiver<T>;
 
-pub mod chatbot;
 pub mod config;
 pub mod server;
 

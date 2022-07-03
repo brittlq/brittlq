@@ -1,13 +1,11 @@
 use axum::{
-    routing::{get, get_service, post},
+    routing::{get, get_service},
     Extension, Router,
 };
 use brittlq::{
-    chatbot::{self, Commands},
-    config::get_user_config,
     server::handlers,
 };
-use std::{net::SocketAddr, process::Command};
+use std::net::SocketAddr;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -60,8 +58,6 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let (state_tx, state_rx) = tokio::sync::mpsc::channel(32);
-    let (chat_tx, mut chat_rx) = tokio::sync::mpsc::channel::<Commands>(4);
-    let bot_state_tx = state_tx.clone();
 
     let state_task = brittlq::init_state(state_rx);
 
@@ -75,7 +71,6 @@ async fn main() -> anyhow::Result<()> {
         .route("/health", get(handlers::empty))
         .fallback(get_service(ServeDir::new("./www/dist")).handle_error(handlers::handle_error))
         .layer(Extension(state_tx))
-        .layer(Extension(chat_tx))
         .layer(TraceLayer::new_for_http());
 
     let server_task = tokio::spawn(async move {
