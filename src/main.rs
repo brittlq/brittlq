@@ -88,14 +88,6 @@ async fn main() -> anyhow::Result<()> {
         Ok(()) as anyhow::Result<()>
     });
 
-    if cfg!(target_os = "windows") {
-        let output = Command::new("cmd")
-            .args(&["/C", "start http://localhost:8080"])
-            .output();
-        if output.is_err() {
-            tracing::error!("Could not launch browser");
-        }
-    }
     tokio::select! {
         _ = server_task => {
             tracing::debug!("Server task exited.");
