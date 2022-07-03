@@ -22,9 +22,7 @@ impl Default for NextQueryArg {
 
 pub mod handlers {
     use super::{dispatch, NextQueryArg};
-    use crate::{
-        StateCommand, StateTx,
-    };
+    use crate::{StateCommand, StateTx};
     use axum::{
         extract::{Path, Query},
         http::StatusCode,
@@ -56,9 +54,7 @@ pub mod handlers {
         Json(queue_status)
     }
 
-    pub async fn toggle_queue(
-        Extension(tx): Extension<StateTx>,
-    ) -> impl IntoResponse {
+    pub async fn toggle_queue(Extension(tx): Extension<StateTx>) -> impl IntoResponse {
         let (resp_tx, resp_rx) = oneshot::channel();
         let queue_status = dispatch(tx, resp_rx, StateCommand::ToggleQueue(resp_tx))
             .await

@@ -2,9 +2,7 @@ use axum::{
     routing::{get, get_service},
     Extension, Router,
 };
-use brittlq::{
-    server::handlers,
-};
+use brittlq::server::handlers;
 use std::net::SocketAddr;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
