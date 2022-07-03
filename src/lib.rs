@@ -67,13 +67,6 @@ pub struct Queue {
     pub is_open: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Token {
-    pub access_token: String,
-    scope: String,
-    token_type: String,
-}
-
 pub fn pop(num: u16, user_queue: &mut VecDeque<UserEntry>) -> Option<Vec<UserEntry>> {
     let mut popped_entries = Vec::new();
     for _ in 0..num {
