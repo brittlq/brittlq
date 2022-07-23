@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import { useQueueStore, User } from '@/store/queue';
-import { defineComponent, PropType } from '@vue/runtime-core';
+import { defineComponent, PropType } from 'vue';
 
 export default defineComponent({
   props: {
