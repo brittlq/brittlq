@@ -1,14 +1,10 @@
 <template>
   <nav>
-    <div class="w-1/6 flex flex-col">
+    <div class="w-1/8 flex flex-col">
       <button class="button-dark" @click="next" :disabled="isDisabled">
         Next
       </button>
-      <button
-        class="button-dark"
-        @click="toggleOpen"
-        v-text="openQueueLabel"
-      ></button>
+      <button class="button-dark" @click="toggleOpen" v-text="openQueueLabel"></button>
     </div>
     <div class="flex flex-col w-1/6">
       <span class="font-bold">Queue size</span>
