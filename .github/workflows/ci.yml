@@ -45,7 +45,7 @@ jobs:
           cache-dependency-path: frontend/yarn.lock
       - run: yarn install --frozen-lockfile
         working-directory: frontend
-      - run: yarn lint
-        working-directory: frontend
+          #- run: yarn lint
+          #working-directory: frontend
       - run: yarn build
         working-directory: frontend
